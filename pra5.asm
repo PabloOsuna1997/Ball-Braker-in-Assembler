@@ -1,6 +1,6 @@
 ;=================================AREA GRAFICA=======================================================
 PintarBloques macro filas 		;reccibira como parametro las filas, esto dependera de cada nivel 
-	LOCAL anchoBloque,Bloque,Fin
+	LOCAL anchoBloque,Bloque,Fin,sumo,sigo
 	
 	mov dl,14 	;color de los bloques
 	xor di,di 	;inicio de bloques
@@ -16,11 +16,11 @@ PintarBloques macro filas 		;reccibira como parametro las filas, esto dependera 
 	anchoBloque:
 		mov cx,40 	;ancho del bloque
 	Bloque:
-		mov [di],dl ;color de los cubos
-		mov [di+320],dl
-		mov [di+640],dl
-		mov [di+960],dl
-		mov [di+1280],dl
+		mov es:[di],dl ;color de los cubos
+		mov es:[di+320],dl
+		mov es:[di+640],dl
+		mov es:[di+960],dl
+		mov es:[di+1280],dl
 		inc di 	;pintara de ancho de 3 filas cada bloque
 		loop Bloque
 
@@ -34,32 +34,35 @@ PintarBloques macro filas 		;reccibira como parametro las filas, esto dependera 
 	cmp bx,1
 	je Fin  		;comparo si es la ultima linea de lo contrario mando a hacer otra linea
 	dec bx
-	mov di,8050
+	mov di,8050		;regreso a la posicion inicial y debo bajar: el tamaño del bloque = 5 mas 10 filas de separacion
 
-	push ax
+	push ax 	;guardo la cantidad de filas que llevo
+	;AJUSTO LA NUEVA POSICION EN LA LINEA DE ABAJO
 	sumo:
+		;sumo 4800 por cada linea que llevo
 		cmp ax,0
 		je sigo
-		add di,4800 	;le sumo las 5 filas ocupadas por el bloque anterior mas 10 pixeles de esapacio vertical
+		add di,4800 	;le sumo las 5 filas ocupadas por el bloque anterior mas 10 FILAS de esapacio vertical
 		dec ax
 		jmp sumo
 
 	sigo:
-		pop ax
+		pop ax 	;retomo el valor de lineas que llevo
 		xor si,si
-		jmp anchoBloque
+		jmp anchoBloque 	;inicio a dibujar la nueva fila
 
 	Fin:
 endm
 
 PintarMargen macro color
+	local Primera,Segunda,Tercera,Cuarta
 	mov dl, color
 
 	;empieza en pixel (i,j) = (20,0) = 20*320+0 = 6400
 	;barra horizontal superior
 	mov di,6405
 	Primera:
-	mov [di],dl
+	mov es:[di],dl
 	inc di
 	cmp di,6714
 	jne Primera
@@ -68,7 +71,7 @@ PintarMargen macro color
 	;empieza en pixel (i,j) = (190,0) = 190 * 320 + 0 = 60800
 	mov di,60805
 	Segunda:
-	mov [di],dl
+	mov es:[di],dl
 	inc di
 	cmp di, 61114
 	jne Segunda
@@ -76,7 +79,7 @@ PintarMargen macro color
 	;barra vertical izquierda
 	mov di, 6405
 	Tercera:
-	mov [di], dl
+	mov es:[di], dl
 	add di,320
 	cmp di,60805
 	jne Tercera
@@ -84,7 +87,7 @@ PintarMargen macro color
 	;barra vertical derecha
 	mov di,6714
 	Cuarta:
-	mov [di], dl
+	mov es:[di], dl
 	add di,320
 	cmp di,61114
 	jne Cuarta
@@ -98,12 +101,13 @@ PintarBarra macro
 	mov dl,11
 	;empieza en pixel (i,j) = (186,130) = 187*320+130=59650
 	mov di,InicioPosActualBarra
+	mov FinBarra,0
 	mov FinBarra,di
 	add FinBarra,50
 
 	Largo:
-	mov [di],dl
-	mov [di+320],dl
+	mov es:[di],dl
+	mov es:[di+320],dl
 	inc di
 	cmp di,FinBarra	;daremos un ancho de 50 pixeles
 	jne Largo
@@ -123,8 +127,8 @@ borrarBarra macro
 	add FinBarra,50
 
 	Largo:
-	mov [di],dl
-	mov [di+320],dl
+	mov es:[di],dl
+	mov es:[di+320],dl
 	inc di
 	cmp di,FinBarra	;daremos un ancho de 50 pixeles
 	jne Largo
@@ -137,43 +141,23 @@ pintarPelota macro pos, color
 	mov di,pos
 	mov dl,color
 
-	mov [di],dl
-	mov [di+1], dl
-	mov [di+2], dl
+	mov es:[di],dl
+	mov es:[di+1], dl
+	mov es:[di+2], dl
 
-	mov [di+320], dl
-	mov [di+321], dl
-	mov [di+322], dl
+	mov es:[di+320], dl
+	mov es:[di+321], dl
+	mov es:[di+322], dl
 
-	mov [di+640], dl
-	mov [di+641], dl
-	mov [di+642], dl
+	mov es:[di+640], dl
+	mov es:[di+641], dl
+	mov es:[di+642], dl
 
-	pop dx
-endm
-
-printGrafico macro cadena
-	push ds
-	mov ah,09h
-	mov dx,@data
-	mov ds,dx
-	mov dx, offset cadena
-	int 21h
-	pop ds
-endm
-
-ImpresionCaracter macro caracter
-	push dx
-	push ax
-	mov ah,02h
-	mov dl,caracter
-	int 21h
-	pop ax
 	pop dx
 endm
 
 MostrarEncabezado macro
-	LOCAL Seguir,Otro,Saltar,Saltar2,pri,noes
+	LOCAL Seguir,Otro,SaltoLineaar,SaltoLineaar2,pri,noes,niv1,niv2,imprimir
 
 	ImpresionCaracter 32 	;imprimimos un espacio
 	printGrafico name_ 		;nombre de usuario actual
@@ -202,7 +186,7 @@ MostrarEncabezado macro
 	ImpresionCaracter 32 ;imprimimos un espacio
 
 	;tiempo----
-	;capturo el tiempo en el que se actual
+	;capturo el tiempo actual
 	push ax
 	push cx
 	push bx
@@ -221,16 +205,16 @@ MostrarEncabezado macro
 	xor bx,bx
 	mov bl,segundosActual
 	add ax,bx
-	sub ax,segundostotalesInicio
+	sub ax,segundostotalesInicio 	;resto el tiempo en el que inicie asi encuantro la diferencia de segundos 
 	mov tiempoTotalSegundos,ax
+	mov timepoParaRegistro,ax 	;voy guardando en el registro el tiempo acumulado
 
-	;ConvertToString2 tiempo
 	ConvertirBCD tiempoTotalSegundos
 	ImpresionCaracter centena
 	ImpresionCaracter decena
 	ImpresionCaracter unidad
 
-	ImpresionCaracter 13
+	ImpresionCaracter 13 	;retorno de carro para que siempre me escriba en la misma linea
 	pop dx
 	pop bx
 	pop cx
@@ -338,10 +322,34 @@ ConvertirBCD macro numero
 				 pop di
 endm
 
+;===================SECCION DE IMPRESION EN MODO GRAFICO=================
+printGrafico macro cadena
+	push ds 	;ahora debo guardar es
+	mov ah,09h
+	mov dx,@data
+	mov ds,dx
+	mov dx, offset cadena
+	int 21h
+	pop ds
+endm
+
+ImpresionCaracter macro caracter
+	push dx
+	push ax
+	mov ah,02h
+	mov dl,caracter
+	int 21h
+	pop ax
+	pop dx
+endm
+
 ;==========================FIN AREA GRAFICA=======================================================
 
+;=========================GESTION DE ARCHIVOS=============================================
 tamnaotexto macro buffer,numerocaracteres
+	
 	LOCAL Repetir,dolar
+	push cx
 	xor si,si
 	mov cx,numerocaracteres
 	Repetir:
@@ -350,6 +358,7 @@ tamnaotexto macro buffer,numerocaracteres
 		inc si
 		Loop Repetir
 	dolar:
+	pop cx
 endm
 
 Abrir macro buffer,handler 
@@ -387,12 +396,29 @@ Crear macro buffer,handler
 endm
 
 Escribir macro handle , numBytes ,buffer
+	push cx
 	mov ah,40h
 	mov bx,handle
 	mov cx,numBytes
 	lea dx,buffer
 	int 21h
+	pop cx
 	jc Error5
+endm
+;=============================================================================================
+
+ModoVideo macro
+	mov ah,00h
+	mov al,13h
+	int 10h
+	mov ax, 0A000h
+	mov es, ax  ; ES = A000h (memoria de graficos).
+endm
+
+ModoTexto macro
+	mov ah,00h
+	mov al,03h
+	int 10h
 endm
 
 getTexto macro buffer
@@ -436,40 +462,6 @@ Limpiar macro buffer, numBytes, caracter
 	pop di
 endm
 
-ModoVideo macro
-	mov ah,00h
-	mov al,13h
-	int 10h
-	mov ax, 0A000h
-	mov ds, ax  ; DS = A000h (memoria de graficos).
-endm
-
-ModoTexto macro
-	mov ah,00h
-	mov al,03h
-	int 10h
-endm
-
-Delay macro constante
-	LOCAL D1,D2,Fin
-	push si
-	push di
-
-	mov si,constante
-	D1:
-	dec si
-	jz Fin
-	mov di,constante
-	D2:
-	dec di
-	jnz D2
-	jmp D1
-
-	Fin:
-	pop di
-	pop si
-endm
-
 getChar macro
 	mov ah,0dh
 	int 21h
@@ -486,85 +478,6 @@ print macro cadena
 	mov dx,offset cadena
 	int 21h
 	pop dx
-	pop ax
-endm
-
-ImpresionCaracter macro caracter
-	push dx
-	push ax
-	mov ah,02h
-	mov dl,caracter
-	int 21h
-	pop ax
-	pop dx
-endm
-
-leertecla macro 
-	LOCAL off,VerificarTecla,Derecha,Izquierda,Nosepuede,Nosepuede1
-	push ax
-	;xor ax,ax
-	mov ah,01h
-	int 16h ;verificar si hay tecla lista para ser leida
-	jz off
-	mov ah,00h
-	int 16h ;leer la tecla
-
-	cmp ah,1 ;si es el boton ESC
-	jne VerificarTecla
-
-	VerificarTecla:
-
-		cmp ah,77
-		je Derecha 	;la flecha derecha responde a la letra M 
-
-		cmp ah,75
-		je Izquierda 	;la flecha derecha responde a la letra K
-
-		cmp al,51
-		je MenuPrincipal
-
-		cmp ah,1 ;si es otro ESC
-		je off
-
-		Derecha:
-			push di
-			push dx
-			mov di,InicioPosActualBarra
-			mov dl,[di+65] 	;inicio de la barra las 50 de largo mas 5 de incrtemento
-			cmp dl,5
-			je Nosepuede1
-			pop dx
-			pop di
-
-			borrarBarra
-			add InicioPosActualBarra,05h
-			PintarBarra
-			jmp off
-
-			Nosepuede1:
-				pop dx
-				pop di
-				jmp off
-		Izquierda:
-			;verifico si puedo moverla 
-			push di
-			push dx
-			mov di,InicioPosActualBarra
-			mov dl,[di-5]
-			cmp dl,5
-			je Nosepuede
-			pop dx
-			pop di
-
-			borrarBarra
-			sub InicioPosActualBarra,05h 	;muevo de 5 en  5 cada vez que acciono la tecla
-			PintarBarra
-			jmp off
-
-			Nosepuede:
-				pop dx
-				pop di
-	off:
 	pop ax
 endm
 
@@ -608,7 +521,7 @@ BuscarUsuario macro buffer,name,pass
 					cmp buffer[si],36
 					je fincadena
 
-					cmp buffer[si],10 	;si viene salto de linea es que se acabo la password
+					cmp buffer[si],10 	;si viene SaltoLineao de linea es que se acabo la password
 					je verificarPassword_
 
 					mov al,buffer[si]
@@ -634,7 +547,7 @@ BuscarUsuario macro buffer,name,pass
 							mov login,1
 							jmp fincadena
 
-			Diferentes:		;si es diferente saltamos hasta el siguiente usuario
+			Diferentes:		;si es diferente SaltoLineaamos hasta el siguiente usuario
 				;si son diferentes pasamos al siguientre usuario
 				cmp buffer[si],10
 				je SigUser
@@ -688,8 +601,151 @@ BuscarUsuario macro buffer,name,pass
 endm
 
 ;================================JUEGO=========================
+leertecla macro 
+	LOCAL pausa,off,VerificarTecla,Derecha,Izquierda,Nosepuede,Nosepuede1,pausa,Nivel2_,Nivel3_,estoyNiv3D,estoyNiv3I,yes,rep,rep1
+	push ax
+	;xor ax,ax
+	mov ah,01h
+	int 16h ;verificar si hay tecla lista para ser leida
+	jz off
+	mov ah,00h
+	int 16h ;leer la tecla
+
+	cmp ah,1 ;si es el boton ESC
+	jne VerificarTecla
+
+	pausa:
+		mov ah,00h 	;haccemos que espere una tecla por ende el juego quedara congelado
+		int 16h 
+
+		cmp ah,1 ;si es otro ESC reanuda el juego
+		je off
+
+		cmp ah,57 ;espacio corresponde a 9 = 57, si viene espacio se regresara al menu principal
+		je INSERTARUSUARIO 	;como se sale del juego mandamos a insertar la data que tenemos
+
+		cmp al,50 ;a nivel 2
+		je PASAMOSNIVEL2
+
+		cmp al,51 ;a nivel 3
+		je PASAMOSNIVEL3
+
+	VerificarTecla:
+
+		cmp ah,77
+		je Derecha 	;la flecha derecha responde a la letra M 
+
+		cmp ah,75
+		je Izquierda 	;la flecha derecha responde a la letra K
+
+		cmp ah,57 	;espacio
+		je INSERTARUSUARIO
+
+		Derecha:
+
+			push di
+			push dx
+			mov di,InicioPosActualBarra
+
+			mov cx,60
+			rep:
+				push di
+				add di,cx
+				mov dl,es:[di] 	;inicio de la barra las 50 de largo mas 10 de incrtemento
+				cmp dl,5
+				je Nosepuede1
+				pop di
+				loop rep
+
+			pop dx
+			pop di
+
+			borrarBarra
+			add InicioPosActualBarra,0ah
+			PintarBarra
+			jmp off
+
+			Nosepuede1:
+				pop di  	;ultimo push del ciclo que se quedo metido
+				pop dx
+				pop di
+				jmp off
+
+		Izquierda:
+			;verifico si puedo moverla 
+			push di
+			push dx
+			mov di,InicioPosActualBarra
+
+			mov cx,10
+			rep1:
+				push di
+				sub di,cx
+				mov dl,es:[di] 	;inicio de la barra las 50 de largo mas 10 de incrtemento
+				cmp dl,5
+				je Nosepuede
+				pop di
+				loop rep1
+
+			pop dx
+			pop di
+
+			borrarBarra
+			sub InicioPosActualBarra,0ah 	;muevo de 5 en  5 cada vez que acciono la tecla
+			PintarBarra
+			jmp off
+
+			Nosepuede:
+				pop di  	;ultimo push del ciclo que se quedo metido
+				pop dx
+				pop di
+	off:
+	pop ax
+endm
+
+Delay macro constante
+	LOCAL D1,D2,Fin
+	push si
+	push di
+
+	mov si,constante
+	D1:
+	dec si
+	jz Fin
+	mov di,constante
+	D2:
+	dec di
+	jnz D2
+	jmp D1
+
+	Fin:
+	pop di
+	pop si
+endm
+
+LimpiarModoGrafico macro
+	LOCAL Limpiando,fin
+	mov di,6400
+	mov dl,0
+
+	Limpiando:
+		cmp di,64000
+		je fin
+
+		mov es:[di],dl ;color negro
+		inc di
+		jmp Limpiando
+
+		fin:
+endm
+
 ;NIVEL 1
+;FILAS 2-> 5 BLOQUES CADA FILA
+;VELOCIDAD 200
+;MOVIMINETO DE LA BARRA +- 5
 NIVEL1 macro
+	local Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
+	;LimpiarModoGrafico
 	ModoVideo	
 	;capturo el tiempo en el que se inicio el nivel1
 	push cx
@@ -709,8 +765,8 @@ NIVEL1 macro
 	xor bx,bx
 	mov bl,segundosInicio
 	add ax,bx				;les sumo los segundos = total de tiempo en segundos 
-	mov segundostotalesInicio,ax
-	ImpresionCaracter 10	;imprimo un salto de linea nose porque si no hay instruccion despues no guarda el valor
+	mov segundostotalesInicio,ax 	;timepo en segundos en el instante que empieza el nivel 1 
+	ImpresionCaracter 10	;imprimo un SaltoLineao de linea nose porque si no hay instruccion despues no guarda el valor
 
 	pop dx
 	pop bx
@@ -728,7 +784,10 @@ NIVEL1 macro
 	mov InicioPosActualBarra,59650	;POSICION DE INICIO DE LA BARRA
 	PintarBarra
 
-	mov dx,35360	;(i,j) = (110,160) = 110*320 + 160 	;inicio de la pelota
+	;hacemos que precione una tecla
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;saldra una posicion arriba de la barra
+	mov dx,59330 ;inicio de la pelota
 
 	Accion:
 		push dx
@@ -745,13 +804,13 @@ NIVEL1 macro
 		mov di,dx
 		add di,02h		
 		
-		mov bl,[di]	;color del margen
+		mov bl,es:[di]	;color del margen
 		cmp bl,0
 		jne auxdd
 		
 		sub di,02h
 		pintarPelota dx, 2
-		Delay 250
+		Delay 200
 		jmp Accion
 
 	auxdd:
@@ -776,21 +835,43 @@ NIVEL1 macro
 		pop dx
 		leertecla
 		pintarPelota dx, 0 
+
 		add dx,321
 
 		;***
-		;***
-		;***
+		;****
+		;****
+		; ***
 		xor bl,bl
 		xor di,di
 		mov di,dx
-		add di,642
-		mov bl,[di]	;color del margen
+
+		sub di,317
+		mov bl,es:[di]	;color del margen
 		cmp bl,0
 		jne Analisis_DecrementoDerecha
+		add di,317
+
+		add di,642
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,642
+
+		add di,322
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,322
+
+		add di,2
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,2
 
 		pintarPelota dx, 2
-		Delay 250
+		Delay 200
 		jmp DecrementoDerecha
 
 		Analisis_DecrementoDerecha:
@@ -806,7 +887,9 @@ NIVEL1 macro
 
 			perdiodd:
 				;mostrar puntos y tiempo y actualizar
-				jmp MenuPrincipal
+				;mov ax,tiempoNivel1
+				;mov timepoParaRegistro,ax 	;almacenamos el tiempo para el registro del usuario
+				jmp INSERTARUSUARIO
 			
 	auxdi:
 		;verifico si fue el color de mis bloques 
@@ -838,13 +921,21 @@ NIVEL1 macro
 		xor bl,bl
 		xor di,di
 		mov di,dx
+
 		add di,640
-		mov bl,[di]	;color del margen
+		mov bl,es:[di]	;color del margen
 		cmp bl,0
 		jne Analisis_DecrementoIzquierda
+		sub di,640
+
+
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoIzquierda
+	
 
 		pintarPelota dx, 2
-		Delay 250
+		Delay 200
 		jmp DecrementoIzquierda
 
 		Analisis_DecrementoIzquierda:
@@ -860,7 +951,9 @@ NIVEL1 macro
 			
 			perdiodi:
 				;mostrar puntos y tiempo y actualizar
-				jmp MenuPrincipal
+				;mov ax,tiempoNivel1
+				;mov timepoParaRegistro,ax 	;almacenamos el tiempo para el registro del usuario
+				jmp INSERTARUSUARIO
 	
 	auxii:
 		;verifico si fue el color de mis bloques 
@@ -892,12 +985,12 @@ NIVEL1 macro
 		xor bl,bl
 		xor di,di
 		mov di,dx
-		mov bl,[di]	;color del margen
+		mov bl,es:[di]	;color del margen
 		cmp bl,0
 		jne Analisis_IncrementoIzquierda
 
 		pintarPelota dx, 2
-		Delay 250
+		Delay 200
 		jmp IncrementoIzquierda
 
 		Analisis_IncrementoIzquierda:
@@ -953,16 +1046,713 @@ NIVEL1 macro
 
 		xor bl,bl
 		mov di,dx
-		add di,02h
 
-		mov bl,[di]	;color del margen
+
+		mov bl,es:[di]	;color del margen
 		cmp bl,0
-		jne Analisis_IncrementoDerecha
+		jne Analisis_IncrementoDerecha		
 		
+
+		add di,02h
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
 		sub di,02h
 
+		add di,322
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,322
+
+		add di,642
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,642
+
 		pintarPelota dx, 2
-		Delay 250
+		Delay 200
+		jmp IncrementoDerecha
+
+		Analisis_IncrementoDerecha:
+			 ;analisis de que direccion debe tomar.
+			 sub di,320 ; si al restarle una linea es negro otravez es porque es la linea superior
+			 cmp di,6400	;si es menor a la 6400 significa que topo en la linea superior
+			 jb auxdd
+
+			 jmp auxii
+endm
+
+;NIVEL 2
+;FILAS 3-> 5 BLOQUES CADA FILA
+;VELOCIDAD 160
+;MOVIMINETO DE LA BARRA +- 5
+NIVEL2 macro
+	local Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
+	LimpiarModoGrafico
+
+	;debo ver la continunacion del cronometro
+	;capturo el tiempo en el que se inicio el nivel1
+	; push cx
+	; push bx
+	; push dx
+
+	; mov ah,2ch
+	; int 21h
+	; mov segundosInicio,dh  ;dh =segundos
+	; mov minutosInicio,cl 	;cl=minutos
+
+	; xor ax,ax
+	; xor bx,bx
+	; mov al,minutosInicio	;guardo los minutos
+	; mov bx,60
+	; mul bx					;multiplico los minutos *60
+	; xor bx,bx
+	; mov bl,segundosInicio
+	; add ax,bx				;les sumo los segundos = total de tiempo en segundos 
+	
+	; ;add ax,tiempoTotalSegundos
+	; mov segundostotalesInicio,ax
+	; ImpresionCaracter 10	;imprimo un SaltoLineao de linea nose porque si no hay instruccion despues no guarda el valor
+
+	; pop dx
+	; pop bx
+	; pop cx
+	; pop ax
+
+	PintarMargen 5			
+	mov NivelActual,2
+	mov punetoActual,10	;si pasa al nivel 2 es porque tiene 10 de punteo
+	MostrarEncabezado
+	;verificar en que nivel voy para poder asignar la velocidad de la pelota y la ccnatidad de bloques
+			
+	mov lineas,3
+	PintarBloques lineas
+	mov InicioPosActualBarra,59650	;POSICION DE INICIO DE LA BARRA
+	PintarBarra
+
+	;hacemos que precione una tecla
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;saldra una posicion arriba de la barra
+	mov dx,59330 ;inicio de la pelota
+
+	Accion:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,319		;incremento derecha
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		mov di,dx
+		add di,02h		
+		
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne auxdd
+		
+		sub di,02h
+		pintarPelota dx, 2
+		Delay 160
+		jmp Accion
+
+	auxdd:
+		;verifico si fue el color de mis bloques
+	
+		cmp bl,14
+		je val
+		jmp marg
+
+		val:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg:
+		add dx,321
+	DecrementoDerecha:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		add dx,321
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		xor di,di
+		mov di,dx
+		
+		sub di,317
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		add di,317
+
+		add di,642
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,642
+
+		add di,322
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,322
+
+		add di,2
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,2
+
+		pintarPelota dx, 2
+		Delay 160
+		jmp DecrementoDerecha
+
+		Analisis_DecrementoDerecha:
+
+			cmp bl,11
+			je marg3 	;color de la barra
+			;analisis de que direccion debe tomar.
+			add di,320 		; si al sumarle una linea es negro otravez es porque es la linea inferior
+			cmp di,60800	;si es menor a la 60800 significa que topo en la cualquier otra linea menos la inferios
+			ja perdiodd
+
+			jmp auxdi
+
+			perdiodd:
+				;mostrar puntos y tiempo y actualizar
+				;mov ax,tiempoNivel2
+				;mov timepoParaRegistro,ax 	;almacenamos el tiempo para el registro del usuario
+				jmp INSERTARUSUARIO
+			
+	auxdi:
+		;verifico si fue el color de mis bloques 
+		
+		cmp bl,14
+		je val1
+		jmp marg1
+
+		val1:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg1:
+		add dx,319
+	DecrementoIzquierda:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		add dx,319
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		xor di,di
+		mov di,dx
+
+		add di,640
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoIzquierda
+		sub di,640
+
+
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoIzquierda
+	
+
+		
+
+		pintarPelota dx, 2
+		Delay 160
+		jmp DecrementoIzquierda
+
+		Analisis_DecrementoIzquierda:
+			 cmp bl,11
+			 je marg2 	;color de la barra
+			 ;analisis de que direccion debe tomar.
+			 add di,320 ; si al sumarle una linea es negro otravez es porque es la linea inferior
+
+			 cmp di,60800	;si es menor a la 60800 significa que topo en la linea superior
+			 ja perdiodi
+
+			 jmp auxdd
+			
+			perdiodi:
+				;mostrar puntos y tiempo y actualizar
+				;mov ax,tiempoNivel2
+				;mov timepoParaRegistro,ax 	;almacenamos el tiempo para el registro del usuario
+				jmp INSERTARUSUARIO
+	
+	auxii:
+		;verifico si fue el color de mis bloques 
+	
+		cmp bl,14
+		je val2
+		jmp marg2
+
+		val2:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg2:
+		sub dx,321
+	IncrementoIzquierda:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,321
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		xor di,di
+		mov di,dx
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoIzquierda
+
+		pintarPelota dx, 2
+		Delay 160
+		jmp IncrementoIzquierda
+
+		Analisis_IncrementoIzquierda:
+			 ;analisis de que direccion debe tomar.
+			 sub di,320 ; si al restarle una linea es negro otravez es porque es la linea superior
+			 cmp di,6400	;si es menor a la 6400 significa que topo en la linea superior
+			 jb auxdi
+
+			 jmp auxid
+
+	auxid:
+		;verifico si fue el color de mis bloques 
+	
+		cmp bl,14
+		je val3
+		jmp marg3
+
+		val3:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg3:
+		sub dx,319
+	IncrementoDerecha:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,319
+
+		;***
+		;***
+		;***
+		; xor bl,bl
+		; xor di,di
+		; mov di,dx
+
+		; sub di,320		;validacion para saber si era el limite superior ya que siempre que tocaba me borraba la linea
+		; cmp di,6400
+		; jb der
+
+
+		; add di,322
+		; der:			
+		; add di,320
+		; mov bl,[di]	;color del margen
+		; cmp bl,0
+		; jne Analisis_IncrementoDerecha
+
+		xor bl,bl
+		mov di,dx
+		
+		add di,02h
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,02h
+
+		add di,322
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,322
+
+		add di,642
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,642
+
+		pintarPelota dx, 2
+		Delay 160
+		jmp IncrementoDerecha
+
+		Analisis_IncrementoDerecha:
+			 ;analisis de que direccion debe tomar.
+			 sub di,320 ; si al restarle una linea es negro otravez es porque es la linea superior
+			 cmp di,6400	;si es menor a la 6400 significa que topo en la linea superior
+			 jb auxdd
+
+			 jmp auxii
+endm
+
+;NIVEL 3
+;FILAS 4-> 5 BLOQUES CADA FILA
+;VELOCIDAD 140
+;MOVIMINETO DE LA BARRA +- 5
+NIVEL3 macro
+	local Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
+	LimpiarModoGrafico
+	;debo ver la continunacion del cronometro
+	;capturo el tiempo en el que se inicio el nivel1
+	; push cx
+	; push bx
+	; push dx
+
+	; mov ah,2ch
+	; int 21h
+	; mov segundosInicio,dh  ;dh =segundos
+	; mov minutosInicio,cl 	;cl=minutos
+
+	; xor ax,ax
+	; xor bx,bx
+	; mov al,minutosInicio	;guardo los minutos
+	; mov bx,60
+	; mul bx					;multiplico los minutos *60
+	; xor bx,bx
+	; mov bl,segundosInicio
+	; add ax,bx				;les sumo los segundos = total de tiempo en segundos 
+	
+	; ;add ax,tiempoTotalSegundos
+	; mov segundostotalesInicio,ax
+	; ImpresionCaracter 10	;imprimo un SaltoLineao de linea nose porque si no hay instruccion despues no guarda el valor
+
+	; pop dx
+	; pop bx
+	; pop cx
+	; pop ax
+
+	PintarMargen 5			
+	mov NivelActual,3
+	mov punetoActual,25	;si pasa al nivel 3 es porque tiene 25 de punteo
+	MostrarEncabezado
+	;verificar en que nivel voy para poder asignar la velocidad de la pelota y la ccnatidad de bloques
+			
+	mov lineas,4
+	PintarBloques lineas
+	mov InicioPosActualBarra,59650	;POSICION DE INICIO DE LA BARRA
+	PintarBarra
+
+	;hacemos que precione una tecla
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;saldra una posicion arriba de la barra
+	mov dx,59330 ;inicio de la pelota
+
+	Accion:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,319		;incremento derecha
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		mov di,dx
+		add di,02h		
+		
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne auxdd
+		
+		sub di,02h
+		pintarPelota dx, 2
+		Delay 140
+		jmp Accion
+
+	auxdd:
+		;verifico si fue el color de mis bloques
+	
+		cmp bl,14
+		je val
+		jmp marg
+
+		val:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg:
+		add dx,321
+	DecrementoDerecha:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		add dx,321
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		xor di,di
+		mov di,dx
+		
+		sub di,317
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		add di,317
+
+		add di,642
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,642
+
+		add di,322
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,322
+
+		add di,2
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoDerecha
+		sub di,2
+
+		pintarPelota dx, 2
+		Delay 140
+		jmp DecrementoDerecha
+
+		Analisis_DecrementoDerecha:
+
+			cmp bl,11
+			je marg3 	;color de la barra
+			;analisis de que direccion debe tomar.
+			add di,320 		; si al sumarle una linea es negro otravez es porque es la linea inferior
+			cmp di,60800	;si es menor a la 60800 significa que topo en la cualquier otra linea menos la inferios
+			ja perdiodd
+
+			jmp auxdi
+
+			perdiodd:
+				;mostrar puntos y tiempo y actualizar
+				;mov ax,tiempoNivel2
+				;mov timepoParaRegistro,ax 	;almacenamos el tiempo para el registro del usuario
+				jmp INSERTARUSUARIO
+			
+	auxdi:
+		;verifico si fue el color de mis bloques 
+		
+		cmp bl,14
+		je val1
+		jmp marg1
+
+		val1:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg1:
+		add dx,319
+	DecrementoIzquierda:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		add dx,319
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		xor di,di
+		mov di,dx
+		
+		add di,640
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoIzquierda
+		sub di,640
+
+
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_DecrementoIzquierda
+	
+
+		pintarPelota dx, 2
+		Delay 140
+		jmp DecrementoIzquierda
+
+		Analisis_DecrementoIzquierda:
+			 cmp bl,11
+			 je marg2 	;color de la barra
+			 ;analisis de que direccion debe tomar.
+			 add di,320 ; si al sumarle una linea es negro otravez es porque es la linea inferior
+
+			 cmp di,60800	;si es menor a la 60800 significa que topo en la linea superior
+			 ja perdiodi
+
+			 jmp auxdd
+			
+			perdiodi:
+				;mostrar puntos y tiempo y actualizar
+				;mov ax,tiempoNivel2
+				;mov timepoParaRegistro,ax 	;almacenamos el tiempo para el registro del usuario
+				jmp INSERTARUSUARIO
+	
+	auxii:
+		;verifico si fue el color de mis bloques 
+	
+		cmp bl,14
+		je val2
+		jmp marg2
+
+		val2:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg2:
+		sub dx,321
+	IncrementoIzquierda:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,321
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		xor di,di
+		mov di,dx
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoIzquierda
+
+		pintarPelota dx, 2
+		Delay 140
+		jmp IncrementoIzquierda
+
+		Analisis_IncrementoIzquierda:
+			 ;analisis de que direccion debe tomar.
+			 sub di,320 ; si al restarle una linea es negro otravez es porque es la linea superior
+			 cmp di,6400	;si es menor a la 6400 significa que topo en la linea superior
+			 jb auxdi
+
+			 jmp auxid
+
+	auxid:
+		;verifico si fue el color de mis bloques 
+	
+		cmp bl,14
+		je val3
+		jmp marg3
+
+		val3:
+			pintarPelota dx, 2 
+			;=====================
+			ValidarChoque lineas
+			pintarPelota dx, 0
+			;MostrarEncabezado
+
+		marg3:
+		sub dx,319
+	IncrementoDerecha:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,319
+
+		;***
+		;***
+		;***
+		; xor bl,bl
+		; xor di,di
+		; mov di,dx
+
+		; sub di,320		;validacion para saber si era el limite superior ya que siempre que tocaba me borraba la linea
+		; cmp di,6400
+		; jb der
+
+
+		; add di,322
+		; der:			
+		; add di,320
+		; mov bl,[di]	;color del margen
+		; cmp bl,0
+		; jne Analisis_IncrementoDerecha
+
+		xor bl,bl
+		mov di,dx
+		
+		add di,02h
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,02h
+
+		add di,322
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,322
+
+		add di,642
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne Analisis_IncrementoDerecha		
+		sub di,642
+		pintarPelota dx, 2
+		Delay 140
 		jmp IncrementoDerecha
 
 		Analisis_IncrementoDerecha:
@@ -976,7 +1766,7 @@ endm
 
 ValidarChoque macro NoLineas
 
-	local sumo,sigo,Comparo,RevisoBloque,Choco,SigBloque,NohayBloque_sig,finval,finval2,limpiaar
+	local sumo,sigo,Comparo,RevisoBloque,Choco,SigBloque,NohayBloque_sig,finval,finval2,limpiaar,Gano1erNivel,Gano2doNivel,Gano3erNivel
 	push dx
 
 	xor cx,cx
@@ -989,7 +1779,7 @@ ValidarChoque macro NoLineas
 	Comparo:
 		push di 	;guardo la posicion inicial del bloque
 		
-		mov dl,[di]
+		mov dl,es:[di]
 		cmp dl,0
 		je NohayBloque_sig
 		
@@ -999,51 +1789,51 @@ ValidarChoque macro NoLineas
 		mov cx,40	;ancho de mis bloques 
 
 		RevisoBloque:
-			mov dl,[di-320] ;arriba
+			mov dl,es:[di-320] ;arriba
 			cmp dl,2
 			je Choco
 
-			mov dl,[di-1] ;fila 0 izquierda
+			mov dl,es:[di-1] ;fila 0 izquierda
 			cmp dl,2
 			je Choco
 			
-			mov dl,[di+1] ;fila 0 derecha
+			mov dl,es:[di+1] ;fila 0 derecha
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+319] ;fila 1 izquierda
+			mov dl,es:[di+319] ;fila 1 izquierda
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+321] ;fila 1 derecha
+			mov dl,es:[di+321] ;fila 1 derecha
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+639] ;fila 2 izquierda
+			mov dl,es:[di+639] ;fila 2 izquierda
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+641] ;fila 2 derecha
+			mov dl,es:[di+641] ;fila 2 derecha
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+959] ;fila 3 izquierda
+			mov dl,es:[di+959] ;fila 3 izquierda
 			cmp dl,2 
 			je Choco
 
-			mov dl,[di+961] ;fila 3 derecha
+			mov dl,es:[di+961] ;fila 3 derecha
 			cmp dl,2 
 			je Choco
 
-			mov dl,[di+1279] ;fila 4 izquierda
+			mov dl,es:[di+1279] ;fila 4 izquierda
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+1281] ;fila 4 derecha
+			mov dl,es:[di+1281] ;fila 4 derecha
 			cmp dl,2
 			je Choco
 
-			mov dl,[di+1600] ;fila 5 abajo
+			mov dl,es:[di+1600] ;fila 5 abajo
 			cmp dl,2 
 			je Choco
 
@@ -1059,15 +1849,49 @@ ValidarChoque macro NoLineas
 				mov dl,0 ;muevo el color negro
 				mov cx,40 	;anccho del bloque
 				limpiaar:
-					mov [di],dl
-					mov [di+320],dl
-					mov [di+640],dl
-					mov [di+960],dl
-					mov [di+1280],dl
+					mov es:[di],dl
+					mov es:[di+320],dl
+					mov es:[di+640],dl
+					mov es:[di+960],dl
+					mov es:[di+1280],dl
 					inc di
 					Loop limpiaar
-					add punetoActual,01h
+					add punetoActual,01h		;si el punteo llega a 10, gano el primer nivel, si es 25 gano el 2 y si es 45 gano el 3er nivel
+					
+					cmp punetoActual,0ah 		;nivel1 se gana con 10 puntos
+					je Gano1erNivel
+
+					cmp punetoActual,19h 		;nivel 2 se gana con 25 puntos
+					je Gano2doNivel
+
+					cmp punetoActual,2dh		;nivel 3 se gana con 45 puntos
+					je Gano3erNivel
+
 					jmp finval2
+
+					Gano1erNivel:
+						;NIVEL2
+						;push ax
+						;mov ax,tiempoTotalSegundos
+						;mov tiempoNivel1,ax
+						;pop ax
+						jmp PASAMOSNIVEL2
+
+					Gano2doNivel:
+						;NIVEL2
+						;push ax
+						;mov ax,tiempoTotalSegundos
+						;mov tiempoNivel1,ax
+						;pop ax
+					jmp PASAMOSNIVEL3
+
+					Gano3erNivel:
+						;NIVEL2
+						;push ax
+						;mov ax,tiempoTotalSegundos
+						;mov tiempoNivel1,ax
+						;pop ax
+					jmp INSERTARUSUARIO
 
 			SigBloque:
 				;printGrafico aqui
@@ -1111,6 +1935,587 @@ ValidarChoque macro NoLineas
 			pop dx
 endm
 
+parseToInt macro number1,num1		;buffer en doinde viene el numero y numero donde se almacenara
+	
+	LOCAL CANTNUMERO1,FIN,CANT_3,CANT_2,CANT_1,final
+	push si ;contador de cuantas posiciones tiene el numero
+	push di
+	push cx
+	;push ax
+	xor si,si
+	xor di,di
+
+	CANTNUMERO1:
+		cmp number1[si],36
+		je FIN
+
+		inc si
+		jmp CANTNUMERO1
+
+		FIN:
+			;ESTADOS UTILIZADOS PARA SABER SI HAY CENTENAS DECENAS O UNIDADES Y EN BASE A ESO SE LE APLICARA UN MULTIPLICADOR
+			cmp si,03h
+			je CANT_3
+
+			cmp si,02h
+			je CANT_2
+
+			cmp si,01h
+			je CANT_1
+
+			CANT_3:
+				xor ax,ax
+				mov al,number1[0]
+				sub al,30h 		;le resto 30h = 48 para obtener el numero real
+				xor cl,cl
+				mov cl,64h		;centena se multipliaca por 100
+				mul cl 	;multiplica ax = cl*al
+				
+				;EL NUMERO ESTA ALAMACENADO EN AX = AH -AL 
+				;mov bl,ah 	;almeceno la parte alta,muevo a otro registro porque ah se usa para imprimir y se modifica
+				;ImpresionCaracter al
+				;ImpresionCaracter bl
+
+				xor cl,cl
+				;hacemos lo mismo para la pocicion 2 solo que ahora es DECENA
+
+				push ax ;guardamos el valor anterior
+				xor ax,ax
+				mov al,number1[1]
+				sub al,30h 		;le resto 30h = 48 para obtener el numero real
+				xor cl,cl
+				mov cl,0ah		;decena se multipliaca por 10
+				mul cl 	;multiplica ax = cl*al
+				xor cl,cl
+				mov num1,0	;limipiamos num1
+				mov num1,ax 	;le pasamos el valor actual
+				xor ax,ax
+				pop ax
+
+				add ax,num1 	;entonces al actualmente tiene la suma de los dos valores.	
+
+				;hacemos lo mismo para la pocicion 2 solo que ahora es DECENA
+				push ax ;guardamos el valor anterior
+				xor ax,ax
+				mov al,number1[2]
+				sub al,30h 		;le resto 30h = 48 para obtener el numero real
+				xor cl,cl
+				mov cl,01h		;decena se multipliaca por 10
+				mul cl 	;multiplica al = cl*al
+				xor cl,cl
+				mov num1,0	;limipiamos num1
+				mov num1,ax 	;le pasamos el valor actual
+				xor ax,ax
+				pop ax
+
+				add ax,num1 	;entonces al actualmente tiene la suma de los dos valores.	
+				mov num1,ax 	;le pasamos el valor verdaderoi a num1
+				
+				;finalmente tengo el numero en num1
+				;mov bl,ah
+				;ImpresionCaracter al
+				;ImpresionCaracter bl
+
+				;leercaracter
+				jmp final
+
+			CANT_2:
+				mov al,number1[0]				
+				sub al,30h 		;le resto 30h = 48 para obtener el numero real
+
+				xor cl,cl
+				mov cl,0ah		;centena se multipliaca por 10
+				mul cl 	;multiplica al = cl*al
+				xor cl,cl
+
+				;hacemos lo mismo para la pocicion 2 solo que ahora es DECENA
+				push ax ;guardamos el valor anterior
+				xor ax,ax
+				mov al,number1[1]
+				sub al,30h 		;le resto 30h = 48 para obtener el numero real
+				xor cl,cl
+				mov cl,01h		;decena se multipliaca por 1
+				mul cl 	;multiplica al = cl*al
+				xor cl,cl
+				mov num1,0	;limipiamos num1
+				mov num1,ax 	;le pasamos el valor actual
+				xor ax,ax
+				pop ax
+
+				add ax,num1 	;entonces al actualmente tiene la suma de los dos valores.	
+				mov num1,ax 	;le pasamos el valor verdaderoi a num1
+
+				;ImpresionCaracter al
+				;leercaracter
+				jmp final
+
+			CANT_1:
+				mov al,number1[0]
+				sub al,30h 		;le resto 30h = 48 para obtener el numero real
+				xor cl,cl
+				mov cl,01h		;centena se multipliaca por 100
+				mul cl 	;multiplica al = cl*al
+				xor cl,cl
+
+				mov num1,ax 	;le pasamos el valor verdaderoi a num1
+			
+				jmp final
+
+				final:	
+				
+				pop cx
+				pop di
+				pop si
+endm
+
+TopPuntos macro bufferRegistro,bufferPuntos
+	local BuscandoNombre,fincadena,Ordenando,PrimeraComa,SegundaComa_,SegundaComa,TerceraComa_,TerceraComa,Finlinea,tope,siguiente,finalizo,menorque10,mayorque10,norm
+	
+	Crear filePuntos,handlerPuntos
+	tamnaotexto encabezado,SIZEOF encabezado
+	Escribir handlerPuntos,si,encabezado
+	Escribir handlerPuntos,1,SaltoLinea
+	Escribir handlerPuntos,1,SaltoLinea
+
+	print encaPuntos
+	tamnaotexto encaPuntos,SIZEOF encaPuntos
+	Escribir handlerPuntos,si,encaPuntos
+	;print bufferRegistro
+	;leercaracter
+	mov contadorTop,0
+	xor si,si
+	xor di,di
+	xor cx,cx	;inicio del usuario1
+	xor bx,bx	;inicio del usuario2
+
+	Ordenando:
+		mov cx,2dh 	;punteo maximo por un jugardor
+		
+		BuscandoNombre:
+
+			cmp bufferRegistro[si],36
+			je fincadena
+
+			cmp bufferRegistro[si],44
+			je PrimeraComa
+
+			mov al,bufferRegistro[si]
+			mov Nombreaux1[di],al
+			inc di
+			inc si
+			jmp BuscandoNombre
+
+
+			PrimeraComa:
+
+				inc si
+				mov al,bufferRegistro[si] 	;aqui esta el nivel
+				mov NivelAux1[0],al
+
+				SegundaComa_:
+
+					inc si
+					inc si
+					xor di,di
+				SegundaComa:
+					cmp bufferRegistro[si],44 	;coma
+					je TerceraComa_
+
+					mov al,bufferRegistro[si]
+					mov PunteoAux1[di],al
+					inc di
+					inc si
+					jmp SegundaComa
+
+					TerceraComa_:
+						inc si
+						xor di,di
+
+						TerceraComa:
+							cmp bufferRegistro[si],10 
+							je Finlinea
+
+							cmp bufferRegistro[si],36
+							je fincadena
+
+							mov al,bufferRegistro[si]
+							mov TiempoAux1[di],al
+							inc di
+							inc si
+							jmp TerceraComa
+
+							Finlinea:
+
+								; print Nombreaux1
+								; print SaltoLinea
+								; print NivelAux1
+								; print SaltoLinea
+								; print PunteoAux1
+								; print SaltoLinea
+								; print TiempoAux1
+								; leercaracter
+
+							parseToInt PunteoAux1,PuntosJugador
+
+							xor ax,ax
+							mov ax,PuntosJugador
+							
+							;ImpresionCaracter al
+							;leercaracter
+							;ImpresionCaracter cl
+							;leercaracter
+							
+							cmp ax,cx
+							je tope
+							jmp Siguiente
+
+
+							tope:
+
+								add contadorTop,01h								
+								cmp contadorTop,0Bh								
+								je finalizo
+
+								cmp contadorTop,10
+								jb menorque10
+								JMP mayorque10
+
+								menorque10:
+								add contadorTop,30h
+								ImpresionCaracter contadorTop
+								Escribir handlerPuntos,1,contadorTop
+							    sub contadorTop,30h
+								jmp norm
+
+								mayorque10:
+								 print diez
+								 Escribir handlerPuntos,2,diez
+
+								 norm:
+								print punto
+								Escribir handlerPuntos,1,punto
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print Nombreaux1
+								push si
+								tamnaotexto Nombreaux1,SIZEOF Nombreaux1
+								Escribir handlerPuntos,si,Nombreaux1
+								pop si
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print NivelAux1
+								push si
+								tamnaotexto NivelAux1,SIZEOF NivelAux1
+								Escribir handlerPuntos,si,NivelAux1
+								pop si
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print PunteoAux1
+								push si
+								tamnaotexto PunteoAux1,SIZEOF PunteoAux1
+								Escribir handlerPuntos,si,PunteoAux1
+								pop si
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print espacio
+								Escribir handlerPuntos,1,espacio
+								print TiempoAux1
+								push si
+								tamnaotexto TiempoAux1,SIZEOF TiempoAux1
+								Escribir handlerPuntos,si,TiempoAux1
+								pop si
+								print SaltoLinea
+								Escribir handlerPuntos,1,SaltoLinea
+								
+
+							siguiente:
+								Limpiar Nombreaux1,SIZEOF Nombreaux1,024h
+							 	Limpiar NivelAux1,SIZEOF NivelAux1,024h
+							 	Limpiar PunteoAux1,SIZEOF PunteoAux1,024h
+							 	Limpiar TiempoAux1,SIZEOF TiempoAux1,024h
+							 	inc si
+							 	;ImpresionCaracter bufferRegistro[si]
+							 	;leercaracter
+							 	xor di,di
+							 	jmp BuscandoNombre
+		fincadena:
+			Limpiar Nombreaux1,SIZEOF Nombreaux1,024h
+			Limpiar NivelAux1,SIZEOF NivelAux1,024h
+			Limpiar PunteoAux1,SIZEOF PunteoAux1,024h
+			Limpiar TiempoAux1,SIZEOF TiempoAux1,024h
+			xor si,si
+			xor di,di
+
+			sub cx,01h
+			cmp cx,00h
+			je finalizo
+			jmp  BuscandoNombre
+
+			finalizo:
+				Cerrar handlerPuntos
+				leercaracter
+				jmp MenuAdministrador
+endm
+
+TopTiempos macro bufferRegistro,bufferTiempos
+	local BuscandoNombre,fincadena,Ordenando,PrimeraComa,SegundaComa_,SegundaComa,TerceraComa_,TerceraComa,Finlinea,tope,siguiente,finalizo,menorque10,mayorque10,norm
+	
+	Crear fileTiempo,handlertiempo
+	tamnaotexto encabezado,SIZEOF encabezado
+	Escribir handlertiempo,si,encabezado
+	Escribir handlertiempo,1,SaltoLinea
+	Escribir handlertiempo,1,SaltoLinea
+
+	print encaTiempos
+	tamnaotexto encaTiempos,SIZEOF encaTiempos
+	Escribir handlertiempo,si,encaTiempos
+	;print bufferRegistro
+	;leercaracter
+	mov contadorTop,0
+	xor si,si
+	xor di,di
+	xor cx,cx	;inicio del usuario1
+	xor bx,bx	;inicio del usuario2
+
+	Ordenando:
+		mov cx,1f4h 	;punteo maximo por un jugardor
+		
+		BuscandoNombre:
+
+			cmp bufferRegistro[si],36
+			je fincadena
+
+			cmp bufferRegistro[si],44
+			je PrimeraComa
+
+			mov al,bufferRegistro[si]
+			mov Nombreaux1[di],al
+			inc di
+			inc si
+			jmp BuscandoNombre
+
+
+			PrimeraComa:
+
+				inc si
+				mov al,bufferRegistro[si] 	;aqui esta el nivel
+				mov NivelAux1[0],al
+
+				SegundaComa_:
+
+					inc si
+					inc si
+					xor di,di
+				SegundaComa:
+					cmp bufferRegistro[si],44 	;coma
+					je TerceraComa_
+
+					mov al,bufferRegistro[si]
+					mov PunteoAux1[di],al
+					inc di
+					inc si
+					jmp SegundaComa
+
+					TerceraComa_:
+						inc si
+						xor di,di
+
+						TerceraComa:
+							cmp bufferRegistro[si],10 
+							je Finlinea
+
+							cmp bufferRegistro[si],36
+							je fincadena
+
+							mov al,bufferRegistro[si]
+							mov TiempoAux1[di],al
+							inc di
+							inc si
+							jmp TerceraComa
+
+							Finlinea:
+
+								; print Nombreaux1
+								; print SaltoLinea
+								; print NivelAux1
+								; print SaltoLinea
+								; print PunteoAux1
+								; print SaltoLinea
+								; print TiempoAux1
+								; leercaracter
+
+							parseToInt TiempoAux1,PuntosJugador
+
+							xor ax,ax
+							mov ax,PuntosJugador
+							
+							;ImpresionCaracter al
+							;leercaracter
+							;ImpresionCaracter cl
+							;leercaracter
+							
+							cmp ax,cx
+							je tope
+							jmp Siguiente
+
+
+							tope:
+
+								add contadorTop,01h								
+								cmp contadorTop,0Bh								
+								je finalizo
+
+								cmp contadorTop,10
+								jb menorque10
+								JMP mayorque10
+
+								menorque10:
+								add contadorTop,30h
+								ImpresionCaracter contadorTop
+								Escribir handlertiempo,1,contadorTop
+							    sub contadorTop,30h
+								jmp norm
+
+								mayorque10:
+								 print diez
+								 Escribir handlertiempo,2,diez
+
+								 norm:
+								print punto
+								Escribir handlertiempo,1,punto
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print Nombreaux1
+								push si
+								tamnaotexto Nombreaux1,SIZEOF Nombreaux1
+								Escribir handlertiempo,si,Nombreaux1
+								pop si
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print NivelAux1
+								push si
+								tamnaotexto NivelAux1,SIZEOF NivelAux1
+								Escribir handlertiempo,si,NivelAux1
+								pop si
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print PunteoAux1
+								push si
+								tamnaotexto PunteoAux1,SIZEOF PunteoAux1
+								Escribir handlertiempo,si,PunteoAux1
+								pop si
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print espacio
+								Escribir handlertiempo,1,espacio
+								print TiempoAux1
+								print segg
+								push si
+								tamnaotexto TiempoAux1,SIZEOF TiempoAux1
+								Escribir handlertiempo,si,TiempoAux1
+								pop si
+								Escribir handlertiempo,3,segg
+								print SaltoLinea
+								Escribir handlertiempo,1,SaltoLinea
+								
+
+							siguiente:
+								Limpiar Nombreaux1,SIZEOF Nombreaux1,024h
+							 	Limpiar NivelAux1,SIZEOF NivelAux1,024h
+							 	Limpiar PunteoAux1,SIZEOF PunteoAux1,024h
+							 	Limpiar TiempoAux1,SIZEOF TiempoAux1,024h
+							 	inc si
+							 	;ImpresionCaracter bufferRegistro[si]
+							 	;leercaracter
+							 	xor di,di
+							 	jmp BuscandoNombre
+		fincadena:
+			Limpiar Nombreaux1,SIZEOF Nombreaux1,024h
+			Limpiar NivelAux1,SIZEOF NivelAux1,024h
+			Limpiar PunteoAux1,SIZEOF PunteoAux1,024h
+			Limpiar TiempoAux1,SIZEOF TiempoAux1,024h
+			xor si,si
+			xor di,di
+
+			sub cx,01h
+			cmp cx,00h
+			je finalizo
+			jmp  BuscandoNombre
+
+			finalizo:
+				Cerrar handlertiempo
+				leercaracter
+				jmp MenuAdministrador
+endm
+
 .model small
 ;-------------------SEGMENTO DE PILA--------------------------
 .stack
@@ -1125,9 +2530,9 @@ ErrorCrear db 10,13,'No ha sido posible crear el archivo',10,13,'$'
 ErrorEscribir db 10,13,'No ha sido posible Escribir el archivo',10,13,'$'
 
 optionn db 10,13,'  Ingrese una opcion: ','$'
-salt db 10,13,'$'
-enc0 db 10,13, '  UNIVERSIDAD DE SAN CARLOS DE GUATEMALA',10,13,'  FACULTAD DE INGENIERIA', 10,13, '  ESCUELA DE CIENCIAS Y SISTEMAS',10,13, '  ARQUITECTURA DE COMPUTADORES Y ENSAMBLADORES 1 B',10,13, '  SEGUNDO SEMESTRE 2019',10,13, '  JUAN PABLO OSUNA DE LEON',10,13, '  201503911',10,13, '  TAREA PRACTICA 5','$'
-enc1 db 10,13,10,13,'  ~~~~~~~~~~~~~~~~~',10,13,'  MENU PRINCIPAL ',10,13,'	',10,13,'  1. INGRESAR            ',10,13,'  2. REGISTRAR          ',10,13,'  3. SALIR             ',10,13,'$'
+SaltoLinea db 10,13,'$'
+encabezado db 10,13, '  UNIVERSIDAD DE SAN CARLOS DE GUATEMALA',10,13,'  FACULTAD DE INGENIERIA', 10,13, '  ESCUELA DE CIENCIAS Y SISTEMAS',10,13, '  ARQUITECTURA DE COMPUTADORES Y ENSAMBLADORES 1 B',10,13, '  SEGUNDO SEMESTRE 2019',10,13, '  JUAN PABLO OSUNA DE LEON',10,13, '  201503911',10,13, '  TAREA PRACTICA 5','$'
+encabezado1 db 10,13,10,13,'  ~~~~~~~~~~~~~~~~~',10,13,'  MENU PRINCIPAL ',10,13,'	',10,13,'  1. INGRESAR            ',10,13,'  2. REGISTRAR          ',10,13,'  3. SALIR             ',10,13,'$'
 ingUser db 10,13,'  Ingrese Nombre de Usuario: ','$'
 ingPass db 10,13,'  Ingrese Password: ','$'
 userCreated db 10,13,'  Usuario creado Satisfactoriamente.',10,13,'$'
@@ -1135,6 +2540,14 @@ LoginError db 10,13,'Usuario o contrase',0a5h,'a incorrectos, intentelo de nuevo
 menuAdmin db 10,13,'  ~~~~~~~~~~~~~~~~~~~~~~~',10,13,'  BIENVENIDO ADMINISTRADOR',10,13,10,13,'  1) TOP 10 PUNTEOS',10,13,'  2) TOP 10 TIEMPOS',10,13,'  3) REGRESAR',10,13,'$'
 time db 10,13,'Tiempo jugado: ','$'
 puntos db 10,13,'puntos acumulados: ','$'
+espacio db ' ','$'
+punto db '.','$'
+diez db '10','$'
+segg db 'seg','$'
+encaPuntos db 10,13,10,13,'        Top 10 Mejores Punteos ',10,13,'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',10,13,'$'
+encaTiempos db 10,13,10,13,'        Top 10 Mayores Tiempos ',10,13,'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',10,13,'$'
+
+
 
 ;---------------------------ARCHIVOS-----------------------------------------
 
@@ -1142,6 +2555,10 @@ puntos db 10,13,'puntos acumulados: ','$'
 handlerUsuarios dw ?
 fileUsuarios db 'regUsu.txt',0
 bufferUsuarios db 500 dup('$')
+
+handlerRegistro dw ?
+fileRegistro db 'Registro.txt',0
+bufferRegistro db 500 dup('$')
 coma db 44
 
 handlerEntrada dw ?
@@ -1181,7 +2598,6 @@ inicioSeg db 0
 inicioMin db 0
 Dia     db 5 dup('$'),'$'  
 
-
 segundosInicio db 0
 minutosInicio db 0
 segundosActual db 0
@@ -1189,48 +2605,55 @@ minutosActual db 0
 
 segundostotalesInicio dw 0
 tiempoTotalSegundos dw 0
+timepoParaRegistro dw 0
+tiempoNivel1 dw 0
+tiempoNivel2 dw 0
+tiempoNivel3 dw 0
 
-primeravez db 0
+;variables para reportes
+bufferTiempos db 1000 dup('$')
+bufferPuntos db 1000 dup('$')
+
+PunteoAux1 db 3 dup('$'),'$'
+TiempoAux1 db 3 dup('$'),'$'
+Nombreaux1 db 10 dup('$')
+NivelAux1 db 1 dup('$')
+
+PunteoAux2 db 3 dup('$'),'$'
+TiempoAux2 db 3 dup('$'),'$'
+Nombreaux2 db 10 dup('$')
+NivelAux2 db 1 dup('$')
+
+PunteoMaximo db 45	
+PuntosJugador dw 0	;numero real de puntos que llevo en hexa
+contadorTop db 0	;indice para saber cuantos usuarios eh mostrado
+
+handlertiempo dw ?
+fileTiempo db 'Tiempo.rep',0
+
+handlerPuntos dw ?
+filePuntos db 'Puntos.rep',0
+;===========================
+
 ;-------------------SEGMENTO DE CODIGO------------------------
 .code
 main proc
 
 	Inicio:
-		print salt		
+		print SaltoLinea		
 		Abrir fileUsuarios,handlerUsuarios
 		Leer handlerUsuarios,bufferUsuarios,SIZEOF bufferUsuarios	;lo leemos parea que el indice se quede en la ultima posicion
 		
 	MenuPrincipal:
-		ModoTexto		
-		;--------MOSTRANDO EL MENU PRINCIPAL--------------------------
-		
-		;AH = 2ch: Leer hora del sistema(CH=hora; CL=min; DH=seg)
-	; mov ah,2ch
-	; int 21h
-	; mov segundos,dh
-	; mov minutos,cl
-	; xor ah,ah
-	; mov al,minutos
-	; mov cx,60
-	; mul cx
-	; mov cl,segundos
-	; xor ch,ch
-	; add ax,cx
-	; mov segun,ax 	;guardamos los segundos en el que se inicio el nivel 1
+		ModoTexto	
 
-	; ConvertirBCD segun
-	; ImpresionCaracter centena
-	; ImpresionCaracter decena
-	; ImpresionCaracter unidad
-
-		print enc0
-		print enc1
-		;print salt
+		print encabezado
+		print encabezado1
 		print optionn
 
 		;--------OBTENIENDO EL NUMERO ESCOGIDO------------------------
 		getChar
-		print salt
+		print SaltoLinea
 		cmp al,'1'; COMPARO CON EL ASCII DEL NUMERO 1 QUE ES 49 Y EN HEXA 31H
 		je Opcion1
 		cmp al,'2'; COMPARO CON EL ASCII DEL NUMERO 1 QUE ES 49 Y EN HEXA 31H
@@ -1254,22 +2677,22 @@ main proc
 		getTexto name_
 		print ingPass
 		getTexto password
-		print salt
+		print SaltoLinea
 		;varificacion de usuario
 		BuscarUsuario bufferUsuarios,name_,password
-		;SI REGRESA ACA SIGNIFICA QUE EL USUARIO SI EXISTE Y SE LOGUEO DE MANERA CORRECTA, DE CASO CONTRARIO DE UNA VEZ SALTARA A MENU PRINCIPAL
+		;SI REGRESA ACA SIGNIFICA QUE EL USUARIO SI EXISTE Y SE LOGUEO DE MANERA CORRECTA, DE CASO CONTRARIO DE UNA VEZ SaltoLineaARA A MENU PRINCIPAL
 
 		cmp esAdmin,1
 		jne UserNormal
 
 		MenuAdministrador:
 			mov esAdmin,0	;regreso al estado cero
-			print salt
+			print SaltoLinea
 			print menuAdmin
 			print optionn
 
 			getChar
-			print salt
+			print SaltoLinea
 			cmp al,'1'; COMPARO CON EL ASCII DEL NUMERO 1 QUE ES 49 Y EN HEXA 31H
 			je Top10Puntos
 			cmp al,'2'; COMPARO CON EL ASCII DEL NUMERO 1 QUE ES 49 Y EN HEXA 31H
@@ -1278,13 +2701,65 @@ main proc
 			je MenuPrincipal
 
 			Top10Tiempos:
+				Abrir fileRegistro,handlerRegistro
+				Leer handlerRegistro,bufferRegistro,SIZEOF bufferRegistro	;lo leemos parea que el indice se quede en la ultima posicion
+				Cerrar handlerRegistro
+
+				TopTiempos bufferRegistro,bufferTiempos
+				jmp MenuPrincipal
+
 			Top10Puntos:
+				Abrir fileRegistro,handlerRegistro
+				Leer handlerRegistro,bufferRegistro,SIZEOF bufferRegistro	;lo leemos parea que el indice se quede en la ultima posicion
+				Cerrar handlerRegistro
+				
+				TopPuntos bufferRegistro,bufferPuntos
+				jmp MenuPrincipal
 
 		UserNormal:
-			;DEBO VERIFICAR EN QUE NIVEL VA EL USUARIO
+			;los datos del usuario estan en name_ y password
 			NIVEL1
+			PASAMOSNIVEL2:
+				NIVEL2
+				PASAMOSNIVEL3:
+					NIVEL3
 
-		getChar
+			INSERTARUSUARIO:
+				ModoTexto
+				;aqui insertaremos el usuario-nivel-punteo-tiempo  de cada usuario que termine o pierda el 
+				Abrir fileRegistro,handlerRegistro
+				Leer handlerRegistro,bufferRegistro,SIZEOF bufferRegistro	;lo leemos parea que el indice se quede en la ultima posicion
+				
+				tamnaotexto name_,SIZEOF name_
+				Escribir handlerRegistro,si,name_
+				
+				add NivelActual,30h 	;le sumo 30h para mostrar el contenido
+				;add ax,30h
+				Escribir handlerRegistro,1,coma
+				Escribir handlerRegistro,1,NivelActual
+				sub NivelActual,30h 	;regreso al valor real
+				Escribir handlerRegistro,1,coma
+				ConvertirBCD punetoActual
+				Escribir handlerRegistro,1,centena
+				Escribir handlerRegistro,1,decena
+				Escribir handlerRegistro,1,unidad
+				Escribir handlerRegistro,1,coma
+				ConvertirBCD timepoParaRegistro 	;contiene el timempo acumulado
+				Escribir handlerRegistro,1,centena
+				Escribir handlerRegistro,1,decena
+				Escribir handlerRegistro,1,unidad
+				Escribir handlerRegistro,1,SaltoLinea
+
+				;vacio registros
+				mov timepoParaRegistro,0
+				mov NivelActual,0
+				mov punetoActual,0
+				Limpiar name_,SIZEOF name_,024h
+				Limpiar password,SIZEOF password,024h
+
+				Cerrar handlerRegistro
+
+
 		ModoTexto
 		jmp MenuPrincipal
 
@@ -1293,14 +2768,14 @@ main proc
 		getTexto name_
 		print ingPass
 		getTexto password
-		print salt
+		print SaltoLinea
 
 		tamnaotexto name_,SIZEOF name_
 		Escribir handlerUsuarios,si,name_
 		Escribir handlerUsuarios,1,coma
 		tamnaotexto password,SIZEOF password
 		Escribir handlerUsuarios,si,password
-		Escribir handlerUsuarios,1,salt
+		Escribir handlerUsuarios,1,SaltoLinea
 		print userCreated 
 		leercaracter
 
