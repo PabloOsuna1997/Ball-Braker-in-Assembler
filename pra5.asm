@@ -848,42 +848,42 @@ NIVEL1 macro
 			mov di,dx
 			
 			add di,323
-			mov bl,es:[di]	;color del margen
-			cmp bl,5 	;choque con margen
+			mov bl,es:[di]	
+			cmp bl,5 	
 			je auxdi
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14
 			je auxdi			
 			sub di,323
 
 
 			add di,643
-			mov bl,es:[di]	;color del margen
+			mov bl,es:[di]	
 			cmp bl,5
 			je auxdi
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi
 			sub di,643
 
 			add di,961
-			mov bl,es:[di]	;color del margen
-			cmp bl,5  	;choca con el margen de abajo
+			mov bl,es:[di]	
+			cmp bl,5  	
 			je INSERTARUSUARIO
 
-			cmp bl,11	;choque con barra
+			cmp bl,11	
 			je auxid
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxid
 			sub di,961
 
 			add di,962
-			mov bl,es:[di]	;color del margen
-			cmp bl,5  	;choca con el margen de abajo
+			mov bl,es:[di]	
+			cmp bl,5  	
 			je INSERTARUSUARIO
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi
 
 			cmp bl,11
@@ -891,11 +891,11 @@ NIVEL1 macro
 			sub di,962
 
 			add di,963
-			mov bl,es:[di]	;color del margen
-			cmp bl,5  	;choca con el margen de abajo
+			mov bl,es:[di]	
+			cmp bl,5  	
 			je auxdi
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi
 			sub di,963
 
@@ -940,9 +940,9 @@ NIVEL1 macro
 
 				add di,319
 				mov bl,es:[di]
-				cmp bl,5 ;choque marco
+				cmp bl,5 
 				je auxdd
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxdd
 				sub di,319
 
@@ -950,7 +950,7 @@ NIVEL1 macro
 				mov bl,es:[di]
 				cmp bl,5
 				je auxdd
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxdd
 				sub di,639
 
@@ -960,7 +960,7 @@ NIVEL1 macro
 				je INSERTARUSUARIO
 				cmp bl,11
 				je auxii
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxii
 				sub di,960
 
@@ -970,7 +970,7 @@ NIVEL1 macro
 				je INSERTARUSUARIO
 				cmp bl,11
 				je auxii
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxii
 				sub di,961
 
@@ -978,7 +978,7 @@ NIVEL1 macro
 				mov bl,es:[di]
 				cmp bl,5
 				je auxdd
-				cmp bl,11 ;choque bloque
+				cmp bl,11 
 				je auxdd
 				sub di,959
 			
@@ -1026,7 +1026,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,5
 			je auxdi
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdi
 			add di,320
 
@@ -1034,7 +1034,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,5
 			je auxdi
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdi
 			add di,319
 
@@ -1042,7 +1042,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,5
 			je auxid
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxid
 			add di,1
 
@@ -1050,15 +1050,15 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxid
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxid
 			sub di,319
 
 			sub di,321
 			mov bl,es:[di]
-			cmp bl,05h ;choque marco
+			cmp bl,05h 
 			je auxdi
-			cmp bl,14 ;choque bloque
+			cmp bl,14
 			je auxdi
 			add di,321
 
@@ -1119,9 +1119,9 @@ NIVEL1 macro
 			
 			sub di,319
 			mov bl,es:[di]
-			cmp bl,05h ;choque marco
+			cmp bl,05h
 			je auxdd
-			cmp bl,14 ;choque bloque
+			cmp bl,14
 			je auxdd
 			add di,319
 
@@ -1129,7 +1129,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxdd
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdd
 			add di,318
 
@@ -1137,7 +1137,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxii
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxii
 			sub di,3
 
@@ -1145,7 +1145,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxii
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxii
 			sub di,323
 
@@ -1153,7 +1153,7 @@ NIVEL1 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxdd
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdd
 			add di,317
 			pintarPelota dx, 2
@@ -1161,7 +1161,6 @@ NIVEL1 macro
 			jmp IncrementoDerecha
 
 			Analisis_IncrementoDerecha:
-
 endm
 
 ;NIVEL 2
@@ -1216,7 +1215,7 @@ NIVEL2 macro
 				mov di,dx
 				add di,02h		
 				
-				mov bl,es:[di]	;color del margen
+				mov bl,es:[di]	
 				cmp bl,0
 				jne auxdd
 				
@@ -2046,7 +2045,7 @@ NIVEL3 macro
 	mov InicioPosActualBarra,59650	;POSICION DE INICIO DE LA BARRA
 	PintarBarra
 
-	mov posicionPelota1,59330
+	mov posicionPelota1,59300
 	mov posicionPelota2,59300
 	mov estadop1,1
 	mov estadop2,0  ;se activara cuando vaya por 31 puntos
@@ -2058,6 +2057,7 @@ NIVEL3 macro
 
 	mov dx,posicionPelota1
 
+	jmp auxii
 	Accion:
 
 			push dx
@@ -2081,6 +2081,7 @@ NIVEL3 macro
 			sub di,02h
 			pintarPelota dx, 2
 			Delay 140
+			
 			jmp Accion
 
 	auxdd:
@@ -2118,42 +2119,42 @@ NIVEL3 macro
 			mov di,dx
 			
 			add di,323
-			mov bl,es:[di]	;color del margen
-			cmp bl,5 	;choque con margen
+			mov bl,es:[di]	
+			cmp bl,5 	
 			je auxdi
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi			
 			sub di,323
 
 
 			add di,643
-			mov bl,es:[di]	;color del margen
+			mov bl,es:[di]	
 			cmp bl,5
 			je auxdi
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi
 			sub di,643
 
 			add di,961
-			mov bl,es:[di]	;color del margen
-			cmp bl,5  	;choca con el margen de abajo
+			mov bl,es:[di]	
+			cmp bl,5  	
 			je INSERTARUSUARIO
 
-			cmp bl,11	;choque con barra
+			cmp bl,11	
 			je auxid
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxid
 			sub di,961
 
 			add di,962
-			mov bl,es:[di]	;color del margen
-			cmp bl,5  	;choca con el margen de abajo
+			mov bl,es:[di]
+			cmp bl,5  	
 			je INSERTARUSUARIO
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi
 
 			cmp bl,11
@@ -2161,11 +2162,11 @@ NIVEL3 macro
 			sub di,962
 
 			add di,963
-			mov bl,es:[di]	;color del margen
-			cmp bl,5  	;choca con el margen de abajo
+			mov bl,es:[di]	
+			cmp bl,5  	
 			je auxdi
 
-			cmp bl,14	;choque con bloque
+			cmp bl,14	
 			je auxdi
 			sub di,963
 
@@ -2210,9 +2211,9 @@ NIVEL3 macro
 
 				add di,319
 				mov bl,es:[di]
-				cmp bl,5 ;choque marco
+				cmp bl,5 
 				je auxdd
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxdd
 				sub di,319
 
@@ -2220,7 +2221,7 @@ NIVEL3 macro
 				mov bl,es:[di]
 				cmp bl,5
 				je auxdd
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxdd
 				sub di,639
 
@@ -2230,7 +2231,7 @@ NIVEL3 macro
 				je INSERTARUSUARIO
 				cmp bl,11
 				je auxii
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxii
 				sub di,960
 
@@ -2240,7 +2241,7 @@ NIVEL3 macro
 				je INSERTARUSUARIO
 				cmp bl,11
 				je auxii
-				cmp bl,14 ;choque bloque
+				cmp bl,14 
 				je auxii
 				sub di,961
 
@@ -2248,7 +2249,7 @@ NIVEL3 macro
 				mov bl,es:[di]
 				cmp bl,5
 				je auxdd
-				cmp bl,11 ;choque bloque
+				cmp bl,11 
 				je auxdd
 				sub di,959
 			
@@ -2296,7 +2297,7 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,5
 			je auxdi
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdi
 			add di,320
 
@@ -2304,7 +2305,7 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,5
 			je auxdi
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdi
 			add di,319
 
@@ -2312,23 +2313,23 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,5
 			je auxid
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxid
 			add di,1
 
 			add di,319
 			mov bl,es:[di]
-			cmp bl,05h
+			cmp bl,5
 			je auxid
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxid
 			sub di,319
 
 			sub di,321
 			mov bl,es:[di]
-			cmp bl,05h ;choque marco
+			cmp bl,5
 			je auxdi
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdi
 			add di,321
 
@@ -2389,9 +2390,9 @@ NIVEL3 macro
 			
 			sub di,319
 			mov bl,es:[di]
-			cmp bl,05h ;choque marco
+			cmp bl,5 
 			je auxdd
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdd
 			add di,319
 
@@ -2399,7 +2400,7 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxdd
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdd
 			add di,318
 
@@ -2407,7 +2408,7 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxii
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxii
 			sub di,3
 
@@ -2415,7 +2416,7 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxii
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxii
 			sub di,323
 
@@ -2423,7 +2424,7 @@ NIVEL3 macro
 			mov bl,es:[di]
 			cmp bl,05h
 			je auxdd
-			cmp bl,14 ;choque bloque
+			cmp bl,14 
 			je auxdd
 			add di,317
 			pintarPelota dx, 2
@@ -2451,7 +2452,7 @@ ValidarChoque macro NoLineas
 		
 		mov dl,es:[di]
 		cmp dl,0
-		je NohayBloque_sig
+		je NohayBloque_sig  	;el bloque ya fue eliminado asi que pasamos al siguiente
 		
 		cmp dl,14
 		jne finval 	;si es diferente al color de mis bloques es porque toco margen
