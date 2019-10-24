@@ -1161,45 +1161,16 @@ NIVEL1 macro
 			jmp IncrementoDerecha
 
 			Analisis_IncrementoDerecha:
-endm
 
+endm
 
 ;NIVEL 2
 ;FILAS 3-> 5 BLOQUES CADA FILA
 ;VELOCIDAD 160
 ;MOVIMINETO DE LA BARRA +- 5
 NIVEL2 macro
-	local Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
+	local muriobola1,Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
 	LimpiarModoGrafico
-
-	;debo ver la continunacion del cronometro
-	;capturo el tiempo en el que se inicio el nivel1
-	; push cx
-	; push bx
-	; push dx
-
-	; mov ah,2ch
-	; int 21h
-	; mov segundosInicio,dh  ;dh =segundos
-	; mov minutosInicio,cl 	;cl=minutos
-
-	; xor ax,ax
-	; xor bx,bx
-	; mov al,minutosInicio	;guardo los minutos
-	; mov bx,60
-	; mul bx					;multiplico los minutos *60
-	; xor bx,bx
-	; mov bl,segundosInicio
-	; add ax,bx				;les sumo los segundos = total de tiempo en segundos 
-	
-	; ;add ax,tiempoTotalSegundos
-	; mov segundostotalesInicio,ax
-	; ImpresionCaracter 10	;imprimo un SaltoLineao de linea nose porque si no hay instruccion despues no guarda el valor
-
-	; pop dx
-	; pop bx
-	; pop cx
-	; pop ax
 
 	PintarMargen 5			
 	mov NivelActual,2
@@ -1217,48 +1188,20 @@ NIVEL2 macro
 	mov estadop1,1
 	mov estadop2,0  ;se activara cuando vaya por 17 puntos
 	mov moviminetoP1,1
-	mov moviminetoP2,2
+	mov moviminetoP2,1
+	mov vidas,1
 
+	mov dx,posicionPelota1
 
 	;;hacemos que precione una tecla
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;;saldra una posicion arriba de la barra
-	
-
-		hola:
-		;hacemos que precione una tecla
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		;saldra una posicion arriba de la barra
-
-	VerificacionPrimeraPelota:
-		cmp estadop1,1
-		je PrimeraPelotaActiva
-
- 		;si no salto a la pelota dos
-
-	 	PrimeraPelotaActiva:
-	 		
-	 		pintarPelota dx, 0 
-	 		mov dx,posicionPelota1 ;inicio de la pelota
-	 		mov di,dx
-	 		mov bl,es:[di]
-			;pintarPelota dx, 0 
-
-			;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-			cmp moviminetoP1,1
-			je auxid
-
-			cmp moviminetoP1,2
-			je auxii
-
-			cmp moviminetoP1,3
-			je auxdd
-
-			cmp moviminetoP1,4
-			je auxdi
-
-
-			Accion:
+	Pelota1:
+		mov dx,posicionPelota1
+		Accion:
+				cmp estadop1,1
+				jne muriobola1
+				
 				push dx
 				MostrarEncabezado
 				pop dx
@@ -1281,16 +1224,15 @@ NIVEL2 macro
 				pintarPelota dx, 2
 				Delay 160
 
-				mov posicionPelota1,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-				;mando a hacer movimiento de la pelota dos	
-				;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-				mov moviminetoP1,1
-				;jmp VerificarSegundaPelota
+				;muriobola1:
+				push dx
+				moverPelotaExtra posicionPelota2,moviminetoP2
+				pop dx
 				jmp Accion
 
-			auxdd:
+		auxdd:
 				;verifico si fue el color de mis bloques
-				mov moviminetoP1,3
+			
 				cmp bl,14
 				je val
 				jmp marg
@@ -1304,7 +1246,10 @@ NIVEL2 macro
 
 				marg:
 				add dx,321
-			DecrementoDerecha:
+		DecrementoDerecha:
+				cmp estadop1,1
+				jne muriobola1
+
 				push dx
 				MostrarEncabezado
 				pop dx
@@ -1322,29 +1267,29 @@ NIVEL2 macro
 				xor di,di
 				mov di,dx
 				
-				add di,322
-				mov bl,es:[di]	
-				cmp bl,5 	
+				add di,323
+				mov bl,es:[di]
+				cmp bl,5 
 				je auxdi
 
-				cmp bl,14	
+				cmp bl,14
 				je auxdi			
-				sub di,322
+				sub di,323
 
 
 				add di,643
-				mov bl,es:[di]	
+				mov bl,es:[di]
 				cmp bl,5
 				je auxdi
 
-				cmp bl,14	
+				cmp bl,14
 				je auxdi
 				sub di,643
 
 				add di,961
-				mov bl,es:[di]	
+				mov bl,es:[di]
 				cmp bl,5  	
-				je INSERTARUSUARIO
+				je muriobola1
 
 				cmp bl,11	
 				je auxid
@@ -1356,7 +1301,7 @@ NIVEL2 macro
 				add di,962
 				mov bl,es:[di]	
 				cmp bl,5  	
-				je INSERTARUSUARIO
+				je muriobola1
 
 				cmp bl,14	
 				je auxdi
@@ -1366,7 +1311,7 @@ NIVEL2 macro
 				sub di,962
 
 				add di,963
-				mov bl,es:[di]
+				mov bl,es:[di]	
 				cmp bl,5  	
 				je auxdi
 
@@ -1376,18 +1321,17 @@ NIVEL2 macro
 
 				pintarPelota dx, 2
 				Delay 160
-				mov posicionPelota1,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-				;mando a hacer movimiento de la pelota dos	
-				;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-				
-				jmp VerificarSegundaPelota
+			
+				push dx
+				moverPelotaExtra posicionPelota2,moviminetoP2
+				pop dx
 				jmp DecrementoDerecha
 
 				Analisis_DecrementoDerecha:   ;analisis porque perdio.  comparar cuantas vidas tiene
-					
-			auxdi:
+			
+		auxdi:
 				;verifico si fue el color de mis bloques 
-				mov moviminetoP1,4
+				
 				cmp bl,14
 				je val1
 				jmp marg1
@@ -1401,7 +1345,432 @@ NIVEL2 macro
 
 				marg1:
 				add dx,319
-			DecrementoIzquierda:
+		DecrementoIzquierda:
+				cmp estadop1,1
+				jne muriobola1
+
+				push dx
+				MostrarEncabezado
+				pop dx
+				leertecla
+				pintarPelota dx, 0 
+				add dx,319
+
+				;***
+				;***
+				;***
+				xor bl,bl
+				xor di,di
+				mov di,dx
+
+				;VALIDACIONES REFERENTES A LA ESQUINA INFERRIOR IZQUIERDA
+
+					add di,319
+					mov bl,es:[di]
+					cmp bl,5 
+					je auxdd
+					cmp bl,14 
+					je auxdd
+					sub di,319
+
+					add di,639
+					mov bl,es:[di]
+					cmp bl,5
+					je auxdd
+					cmp bl,14 
+					je auxdd
+					sub di,639
+
+					add di,960
+					mov bl,es:[di]
+					cmp bl,5
+					je muriobola1
+					cmp bl,11
+					je auxii
+					cmp bl,14 
+					je auxii
+					sub di,960
+
+					add di,961
+					mov bl,es:[di]
+					cmp bl,5
+					je muriobola1
+					cmp bl,11
+					je auxii
+					cmp bl,14 
+					je auxii
+					sub di,961
+
+					add di,959
+					mov bl,es:[di]
+					cmp bl,5
+					je auxdd
+					cmp bl,11 
+					je auxdd
+					sub di,959
+				
+
+				pintarPelota dx, 2
+				Delay 160
+				push dx
+				moverPelotaExtra posicionPelota2,moviminetoP2
+				pop dx
+				jmp DecrementoIzquierda
+
+				Analisis_DecrementoIzquierda:			 
+			
+		auxii:
+				;verifico si fue el color de mis bloques 
+			
+				cmp bl,14
+				je val2
+				jmp marg2
+
+				val2:
+					pintarPelota dx, 2 
+					;=====================
+					ValidarChoque lineas
+					pintarPelota dx, 0
+					;MostrarEncabezado
+
+				marg2:
+				sub dx,321
+		IncrementoIzquierda:
+				cmp estadop1,1
+				jne muriobola1
+
+				push dx
+				MostrarEncabezado
+				pop dx
+				leertecla
+				pintarPelota dx, 0 
+				sub dx,321
+
+				;***
+				;***
+				;***
+
+				;VALIDACIONES REFERENTES A LA ESQUINA SUPERIOR IZQUIERDA
+				xor bl,bl
+				xor di,di
+				mov di,dx
+
+				sub di,320
+				mov bl,es:[di]
+				cmp bl,5
+				je auxdi
+				cmp bl,14 
+				je auxdi
+				add di,320
+
+				sub di,319
+				mov bl,es:[di]
+				cmp bl,5
+				je auxdi
+				cmp bl,14 
+				je auxdi
+				add di,319
+
+				sub di,1
+				mov bl,es:[di]
+				cmp bl,5
+				je auxid
+				cmp bl,14 
+				je auxid
+				add di,1
+
+				add di,319
+				mov bl,es:[di]
+				cmp bl,05h
+				je auxid
+				cmp bl,14 
+				je auxid
+				sub di,319
+
+				sub di,321
+				mov bl,es:[di]
+				cmp bl,05h 
+				je auxdi
+				cmp bl,14 
+				je auxdi
+				add di,321
+
+				pintarPelota dx, 2
+				Delay 160
+				push dx
+				moverPelotaExtra posicionPelota2,moviminetoP2
+				pop dx
+				jmp IncrementoIzquierda
+
+				Analisis_IncrementoIzquierda:			 
+
+		auxid:
+				;verifico si fue el color de mis bloques 
+			
+				cmp bl,14
+				je val3
+				jmp marg3
+
+				val3:
+					pintarPelota dx, 2 
+					;=====================
+					ValidarChoque lineas
+					pintarPelota dx, 0
+					;MostrarEncabezado
+
+				marg3:
+				sub dx,319
+		IncrementoDerecha:
+
+				cmp estadop1,1
+				jne muriobola1
+
+				push dx
+				MostrarEncabezado
+				pop dx
+				leertecla
+				pintarPelota dx, 0 
+				sub dx,319
+
+				;***
+				;***
+				;***
+				; xor bl,bl
+				; xor di,di
+				; mov di,dx
+
+				; sub di,320		;validacion para saber si era el limite superior ya que siempre que tocaba me borraba la linea
+				; cmp di,6400
+				; jb der
+
+
+				; add di,322
+				; der:			
+				; add di,320
+				; mov bl,[di]	;color del margen
+				; cmp bl,0
+				; jne Analisis_IncrementoDerecha
+
+				xor bl,bl
+				xor di,di
+				mov di,dx
+
+				;VALIDACIONES REFERENTES A LA ESQUINA SUPERIOR DERECHA
+				
+				sub di,319
+				mov bl,es:[di]
+				cmp bl,05h 
+				je auxdd
+				cmp bl,14 
+				je auxdd
+				add di,319
+
+				sub di,318
+				mov bl,es:[di]
+				cmp bl,05h
+				je auxdd
+				cmp bl,14 
+				je auxdd
+				add di,318
+
+				add di,3
+				mov bl,es:[di]
+				cmp bl,05h
+				je auxii
+				cmp bl,14 
+				je auxii
+				sub di,3
+
+				add di,323
+				mov bl,es:[di]
+				cmp bl,05h
+				je auxii
+				cmp bl,14 
+				je auxii
+				sub di,323
+
+				sub di,317
+				mov bl,es:[di]
+				cmp bl,05h
+				je auxdd
+				cmp bl,14 
+				je auxdd
+				add di,317
+				pintarPelota dx, 2
+				Delay 160
+				push dx
+				moverPelotaExtra posicionPelota2,moviminetoP2
+				pop dx
+				jmp IncrementoDerecha
+
+				Analisis_IncrementoDerecha:
+
+		muriobola1:
+			mov estadop1,0
+			cmp estadop2,1
+			jne INSERTARUSUARIO 	;perdio las dos vidas 
+
+			push dx
+			moverPelotaExtra posicionPelota2,moviminetoP2
+			pop dx
+			jmp Accion
+endm
+
+moverPelotaExtra macro posicion,estadoactual
+	local insert,fin_1,finfin,fin,Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
+
+	cmp estadop2,1
+	jne finfin
+
+	mov dx,posicion
+	pintarPelota dx,0
+
+	cmp estadoactual,1
+	je auxid
+	
+	cmp estadoactual,2
+	je auxii
+
+	cmp estadoactual,3
+	je auxdd
+
+	cmp estadoactual,4
+	je auxdi
+
+	Accion:
+		push dx
+		MostrarEncabezado
+		pop dx
+		leertecla
+		pintarPelota dx, 0 
+		sub dx,319		;incremento derecha
+
+		;***
+		;***
+		;***
+		xor bl,bl
+		mov di,dx
+		add di,02h		
+				
+		mov bl,es:[di]	;color del margen
+		cmp bl,0
+		jne auxdd
+				
+		sub di,02h
+		pintarPelota dx, 2
+		Delay 180
+		;mov id=1,ii=2,dd=3,di=4
+		mov moviminetoP2,1
+		jmp fin
+
+		auxdd:
+			;verifico si fue el color de mis bloques
+			
+			cmp bl,14
+			je val
+			jmp marg
+			val:
+				pintarPelota dx, 2 
+				;=====================
+				ValidarChoque lineas
+				pintarPelota dx, 0
+				;MostrarEncabezado
+
+			marg:
+				add dx,321
+		DecrementoDerecha:
+			push dx
+			MostrarEncabezado
+			pop dx
+			leertecla
+			pintarPelota dx, 0 
+			add dx,321
+
+			;***
+			;***
+			;***
+
+			;VALIDACIONES HACIA LA ESQUINA INFERIOR DERECHA
+
+			xor bl,bl
+			xor di,di
+			mov di,dx
+				
+			add di,322
+			mov bl,es:[di]
+			cmp bl,5 	
+			je auxdi
+
+			cmp bl,14	
+			je auxdi			
+			sub di,322
+
+
+			add di,643
+			mov bl,es:[di]
+			cmp bl,5
+			je auxdi
+
+			cmp bl,14	
+			je auxdi
+			sub di,643
+
+			add di,961
+			mov bl,es:[di]
+			cmp di,60805  	
+			ja fin_1
+
+			cmp bl,11	
+			je auxid
+
+			cmp bl,14	
+			je auxid
+			sub di,961
+
+			add di,962
+			mov bl,es:[di]
+				cmp di,60805  	
+			ja fin_1
+
+			cmp bl,14	
+			je auxdi
+
+			cmp bl,11
+			je auxid
+			sub di,962
+
+			add di,963
+			mov bl,es:[di]	
+			cmp bl,5  	
+			je auxdi
+
+			cmp bl,14	
+			je auxdi
+			sub di,963
+
+			pintarPelota dx, 2
+			Delay 180
+			;mov id=1,ii=2,dd=3,di=4
+			mov moviminetoP2,3
+			jmp fin
+			
+		auxdi:
+				;verifico si fue el color de mis bloques 
+				
+				cmp bl,14
+				je val1
+				jmp marg1
+
+				val1:
+					pintarPelota dx, 2 
+					;=====================
+					ValidarChoque lineas
+					pintarPelota dx, 0
+					;MostrarEncabezado
+
+				marg1:
+				add dx,319
+		DecrementoIzquierda:
 				push dx
 				MostrarEncabezado
 				pop dx
@@ -1436,8 +1805,8 @@ NIVEL2 macro
 
 					add di,960
 					mov bl,es:[di]
-					cmp bl,5
-					je INSERTARUSUARIO
+						cmp di,60805  	;choca con el margen de abajo
+					ja fin_1
 					cmp bl,11
 					je auxii
 					cmp bl,14 ;choque bloque
@@ -1446,8 +1815,8 @@ NIVEL2 macro
 
 					add di,961
 					mov bl,es:[di]
-					cmp bl,5
-					je INSERTARUSUARIO
+						cmp di,60805  	;choca con el margen de abajo
+					ja fin_1
 					cmp bl,11
 					je auxii
 					cmp bl,14 ;choque bloque
@@ -1464,19 +1833,14 @@ NIVEL2 macro
 				
 
 				pintarPelota dx, 2
-				Delay 160
-				mov posicionPelota1,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-				;mando a hacer movimiento de la pelota dos	
-				;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-				
-				jmp VerificarSegundaPelota
-				jmp DecrementoIzquierda
-
-				Analisis_DecrementoIzquierda:
-					 	
-			auxii:
+				Delay 180
+				;mov id=1,ii=2,dd=3,di=4
+				mov moviminetoP2,4
+				jmp fin
+						 	
+		auxii:
 				;verifico si fue el color de mis bloques 
-				mov moviminetoP1,2
+			
 				cmp bl,14
 				je val2
 				jmp marg2
@@ -1490,7 +1854,7 @@ NIVEL2 macro
 
 				marg2:
 				sub dx,321
-			IncrementoIzquierda:
+		IncrementoIzquierda:
 				push dx
 				MostrarEncabezado
 				pop dx
@@ -1548,19 +1912,14 @@ NIVEL2 macro
 				add di,321
 
 				pintarPelota dx, 2
-				Delay 160
-				mov posicionPelota1,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-				;mando a hacer movimiento de la pelota dos	
-				;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-				
-				jmp VerificarSegundaPelota
-				jmp IncrementoIzquierda
+				Delay 180
+				;mov id=1,ii=2,dd=3,di=4
+				mov moviminetoP2,2
+				jmp fin		 
 
-				Analisis_IncrementoIzquierda:
-					 
-			auxid:
+		auxid:
 				;verifico si fue el color de mis bloques 
-				mov moviminetoP1,1
+			
 				cmp bl,14
 				je val3
 				jmp marg3
@@ -1574,7 +1933,7 @@ NIVEL2 macro
 
 				marg3:
 				sub dx,319
-			IncrementoDerecha:
+		IncrementoDerecha:
 				push dx
 				MostrarEncabezado
 				pop dx
@@ -1609,509 +1968,62 @@ NIVEL2 macro
 				
 				sub di,319
 				mov bl,es:[di]
-				cmp bl,5 
+				cmp bl,05h ;choque marco
 				je auxdd
-				cmp bl,14 
+				cmp bl,14 ;choque bloque
 				je auxdd
 				add di,319
 
 				sub di,318
 				mov bl,es:[di]
-				cmp bl,5
+				cmp bl,05h
 				je auxdd
-				cmp bl,14 
+				cmp bl,14 ;choque bloque
 				je auxdd
 				add di,318
 
-				add di,1
-				mov bl,es:[di]
-				cmp bl,5
-				je auxii
-				cmp bl,14 
-				je auxii
-				sub di,1
-
-				add di,2
-				mov bl,es:[di]
-				cmp bl,5
-				je auxii
-				cmp bl,14 
-				je auxii
-				sub di,2
-
 				add di,3
 				mov bl,es:[di]
-				cmp bl,5
+				cmp bl,05h
 				je auxii
-				cmp bl,14 
+				cmp bl,14 ;choque bloque
 				je auxii
 				sub di,3
 
 				add di,323
 				mov bl,es:[di]
-				cmp bl,5
+				cmp bl,05h
 				je auxii
-				cmp bl,14 
+				cmp bl,14 ;choque bloque
 				je auxii
 				sub di,323
 
 				sub di,317
 				mov bl,es:[di]
-				cmp bl,5
+				cmp bl,05h
 				je auxdd
-				cmp bl,14 
+				cmp bl,14 ;choque bloque
 				je auxdd
 				add di,317
-
 				pintarPelota dx, 2
-				Delay 160
-				mov posicionPelota1,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-				;mando a hacer movimiento de la pelota dos	
-				;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-				
-				jmp VerificarSegundaPelota
-				jmp IncrementoDerecha
-
-				Analisis_IncrementoDerecha:
-
-
-	VerificarSegundaPelota:
-		cmp estadop2,1
-		je SegundaPleotaActiva
-
-		Delay 160
-		jmp VerificacionPrimeraPelota
-
-		; sino salto a la pelota 1 o si no RIP
-
-		SegundaPleotaActiva:
-
-				pintarPelota dx, 0 
-				mov dx,posicionPelota2
-				mov di,dx
-	 			mov bl,es:[di]
-				;pintarPelota dx, 0 
-				
-
-				;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-				cmp moviminetoP2,1
-				je auxid2
-
-				cmp moviminetoP2,2
-				je auxii2
-
-				cmp moviminetoP2,3
-				je auxdd2
-
-				cmp moviminetoP2,4
-				je auxdi2
-
-				Accion2:
-					push dx
-					MostrarEncabezado
-					pop dx
-					leertecla
-					pintarPelota dx, 0 
-					sub dx,319		;incremento derecha
-
-					;***
-					;***
-					;***
-					xor bl,bl
-					mov di,dx
-					add di,02h		
-					
-					mov bl,es:[di]	;color del margen
-					cmp bl,0
-					jne auxdd2
-					
-					sub di,02h
-					pintarPelota dx, 2
-					Delay 160
-
-					mov posicionPelota2,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-					;mando a hacer movimiento de la pelota dos	
-					;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-					mov moviminetoP2,1
-					jmp VerificacionPrimeraPelota
-					jmp Accion2
-
-				auxdd2:
-					;verifico si fue el color de mis bloques
-					mov moviminetoP2,3
-					cmp bl,14
-					je val21
-					jmp marg21
-
-					val21:
-						pintarPelota dx, 2 
-						;=====================
-						ValidarChoque lineas
-						pintarPelota dx, 0
-						;MostrarEncabezado
-
-					marg21:
-					add dx,321
-				DecrementoDerecha2:
-					push dx
-					MostrarEncabezado
-					pop dx
-					leertecla
-					pintarPelota dx, 0 
-					add dx,321
-
-					;***
-					;***
-					;***
-
-					;VALIDACIONES HACIA LA ESQUINA INFERIOR DERECHA
-
-					xor bl,bl
-					xor di,di
-					mov di,dx
-					
-					add di,322
-					mov bl,es:[di]	;color del margen
-					cmp bl,5 	;choque con margen
-					je auxdi2
-
-					cmp bl,14	;choque con bloque
-					je auxdi2			
-					sub di,322
-
-
-					add di,643
-					mov bl,es:[di]	;color del margen
-					cmp bl,5
-					je auxdi2
-
-					cmp bl,14	;choque con bloque
-					je auxdi2
-					sub di,643
-
-					add di,961
-					mov bl,es:[di]	;color del margen
-					cmp bl,5  	;choca con el margen de abajo
-					je INSERTARUSUARIO
-
-					cmp bl,11	;choque con barra
-					je auxid2
-
-					cmp bl,14	;choque con bloque
-					je auxid2
-					sub di,961
-
-					add di,962
-					mov bl,es:[di]	;color del margen
-					cmp bl,5  	;choca con el margen de abajo
-					je INSERTARUSUARIO
-
-					cmp bl,14	;choque con bloque
-					je auxdi2
-
-					cmp bl,11
-					je auxid2
-					sub di,962
-
-					add di,963
-					mov bl,es:[di]	;color del margen
-					cmp bl,5  	;choca con el margen de abajo
-					je auxdi2
-
-					cmp bl,14	;choque con bloque
-					je auxdi2
-					sub di,963
-
-					pintarPelota dx, 2
-					Delay 160
-					mov posicionPelota2,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-					;mando a hacer movimiento de la pelota dos	
-					;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-					;mov moviminetoP2,3
-					jmp VerificacionPrimeraPelota
-					jmp DecrementoDerecha2
-
-					Analisis_DecrementoDerecha2:   ;analisis porque perdio.  comparar cuantas vidas tiene
-						
-				auxdi2:
-					;verifico si fue el color de mis bloques 
-					mov moviminetoP2,4
-					cmp bl,14
-					je val12
-					jmp marg12
-
-					val12:
-						pintarPelota dx, 2 
-						;=====================
-						ValidarChoque lineas
-						pintarPelota dx, 0
-						;MostrarEncabezado
-
-					marg12:
-					add dx,319
-				DecrementoIzquierda2:
-					push dx
-					MostrarEncabezado
-					pop dx
-					leertecla
-					pintarPelota dx, 0 
-					add dx,319
-
-					;***
-					;***
-					;***
-					xor bl,bl
-					xor di,di
-					mov di,dx
-
-					;VALIDACIONES REFERENTES A LA ESQUINA INFERRIOR IZQUIERDA
-
-						add di,319
-						mov bl,es:[di]
-						cmp bl,5 ;choque marco
-						je auxdd2
-						cmp bl,14 ;choque bloque
-						je auxdd2
-						sub di,319
-
-						add di,639
-						mov bl,es:[di]
-						cmp bl,5
-						je auxdd2
-						cmp bl,14 ;choque bloque
-						je auxdd2
-						sub di,639
-
-						add di,960
-						mov bl,es:[di]
-						cmp bl,5
-						je INSERTARUSUARIO
-						cmp bl,11
-						je auxii2
-						cmp bl,14 ;choque bloque
-						je auxii2
-						sub di,960
-
-						add di,961
-						mov bl,es:[di]
-						cmp bl,5
-						je INSERTARUSUARIO
-						cmp bl,11
-						je auxii2
-						cmp bl,14 ;choque bloque
-						je auxii2
-						sub di,961
-
-						add di,959
-						mov bl,es:[di]
-						cmp bl,5
-						je auxdd2
-						cmp bl,11 ;choque bloque
-						je auxdd2
-						sub di,959
-					
-
-					pintarPelota dx, 2
-					Delay 160
-					mov posicionPelota2,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-					;mando a hacer movimiento de la pelota dos	
-					;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-					;mov moviminetoP2,4
-					jmp VerificacionPrimeraPelota
-					jmp DecrementoIzquierda
-
-					Analisis_DecrementoIzquierda2:
-				
-				auxii2:
-					;verifico si fue el color de mis bloques 
-					mov moviminetoP2,2
-					cmp bl,14
-					je val22
-					jmp marg22
-
-					val22:
-						pintarPelota dx, 2 
-						;=====================
-						ValidarChoque lineas
-						pintarPelota dx, 0
-						;MostrarEncabezado
-
-					marg22:
-					sub dx,321
-				IncrementoIzquierda2:
-					push dx
-					MostrarEncabezado
-					pop dx
-					leertecla
-					pintarPelota dx, 0 
-					sub dx,321
-
-					;***
-					;***
-					;***
-
-					;VALIDACIONES REFERENTES A LA ESQUINA SUPERIOR IZQUIERDA
-					xor bl,bl
-					xor di,di
-					mov di,dx
-
-					sub di,320
-					mov bl,es:[di]
-					cmp bl,5
-					je auxdi2
-					cmp bl,14 ;choque bloque
-					je auxdi2
-					add di,320
-
-					sub di,319
-					mov bl,es:[di]
-					cmp bl,5
-					je auxdi2
-					cmp bl,14 ;choque bloque
-					je auxdi2
-					add di,319
-
-					sub di,1
-					mov bl,es:[di]
-					cmp bl,5
-					je auxid2
-					cmp bl,14 ;choque bloque
-					je auxid2
-					add di,1
-
-					add di,319
-					mov bl,es:[di]
-					cmp bl,05h
-					je auxid2
-					cmp bl,14 ;choque bloque
-					je auxid2
-					sub di,319
-
-					sub di,321
-					mov bl,es:[di]
-					cmp bl,05h ;choque marco
-					je auxdi2
-					cmp bl,14 ;choque bloque
-					je auxdi2
-					add di,321
-
-					pintarPelota dx, 2
-					Delay 160
-					mov posicionPelota2,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-					;mando a hacer movimiento de la pelota dos	
-					;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-					;mov moviminetoP2,2
-					jmp VerificacionPrimeraPelota
-					jmp IncrementoIzquierda2
-
-					Analisis_IncrementoIzquierda2:
-
-				auxid2:
-					;verifico si fue el color de mis bloques 
-					mov moviminetoP2,1
-					cmp bl,14
-					je val32
-					jmp marg32
-
-					val32:
-						pintarPelota dx, 2 
-						;=====================
-						ValidarChoque lineas
-						pintarPelota dx, 0
-						;MostrarEncabezado
-
-					marg32:
-					sub dx,319
-				IncrementoDerecha2:
-					push dx
-					MostrarEncabezado
-					pop dx
-					leertecla
-					pintarPelota dx, 0 
-					sub dx,319
-
-					;***
-					;***
-					;***
-					; xor bl,bl
-					; xor di,di
-					; mov di,dx
-
-					; sub di,320		;validacion para saber si era el limite superior ya que siempre que tocaba me borraba la linea
-					; cmp di,6400
-					; jb der
-
-
-					; add di,322
-					; der:			
-					; add di,320
-					; mov bl,[di]	;color del margen
-					; cmp bl,0
-					; jne Analisis_IncrementoDerecha
-
-					xor bl,bl
-					xor di,di
-					mov di,dx
-
-					;VALIDACIONES REFERENTES A LA ESQUINA SUPERIOR DERECHA
-					
-					sub di,319
-					mov bl,es:[di]
-					cmp bl,05h ;choque marco
-					je auxdd2
-					cmp bl,14 ;choque bloque
-					je auxdd2
-					add di,319
-
-					sub di,318
-					mov bl,es:[di]
-					cmp bl,05h
-					je auxdd2
-					cmp bl,14 ;choque bloque
-					je auxdd2
-					add di,318
-
-					add di,2
-					mov bl,es:[di]
-					cmp bl,05h
-					je auxii2
-					cmp bl,14 ;choque bloque
-					je auxii2
-					sub di,2
-
-					add di,3
-					mov bl,es:[di]
-					cmp bl,05h
-					je auxii2
-					cmp bl,14 ;choque bloque
-					je auxii2
-					sub di,3
-
-					add di,323
-					mov bl,es:[di]
-					cmp bl,05h
-					je auxii2
-					cmp bl,14 ;choque bloque
-					je auxii2
-					sub di,323
-
-					sub di,317
-					mov bl,es:[di]
-					cmp bl,05h
-					je auxdd2
-					cmp bl,14 ;choque bloque
-					je auxdd2
-					add di,317
-					pintarPelota dx, 2
-					Delay 160
-					mov posicionPelota2,dx 	;GUARDO LA POSICION DE LA PELOTA 1
-					;mando a hacer movimiento de la pelota dos	
-					;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
-					;mov moviminetoP2,1
-					jmp VerificacionPrimeraPelota
-					jmp IncrementoDerecha2
-
-					Analisis_IncrementoDerecha2:
+				Delay 180
+				;mov id=1,ii=2,dd=3,di=4
+				mov moviminetoP2,1
+				jmp fin		
+
+		fin_1:
+			;verifico cuantas vidas tengo 
+			sub vidas,01h
+			cmp vidas,00h
+			je INSERTARUSUARIO
+
+			mov estadop2,0	 ;pelota 2 muere ya no se debe mostrar
+			jmp finfin
+
+		fin:
+			mov posicionPelota2,dx
+
+		finfin:
 endm
 
 ;NIVEL 3
@@ -2121,34 +2033,7 @@ endm
 NIVEL3 macro
 	local Accion,auxdd,val,marg,DecrementoDerecha,Analisis_DecrementoDerecha,perdiodd,auxdi,val1,marg1,DecrementoIzquierda,Analisis_DecrementoIzquierda,perdiodi,auxii,val2,marg2,IncrementoIzquierda,Analisis_IncrementoIzquierda,auxid,val3,marg3,IncrementoDerecha,Analisis_IncrementoDerecha
 	LimpiarModoGrafico
-	;debo ver la continunacion del cronometro
-	;capturo el tiempo en el que se inicio el nivel1
-	; push cx
-	; push bx
-	; push dx
 
-	; mov ah,2ch
-	; int 21h
-	; mov segundosInicio,dh  ;dh =segundos
-	; mov minutosInicio,cl 	;cl=minutos
-
-	; xor ax,ax
-	; xor bx,bx
-	; mov al,minutosInicio	;guardo los minutos
-	; mov bx,60
-	; mul bx					;multiplico los minutos *60
-	; xor bx,bx
-	; mov bl,segundosInicio
-	; add ax,bx				;les sumo los segundos = total de tiempo en segundos 
-	
-	; ;add ax,tiempoTotalSegundos
-	; mov segundostotalesInicio,ax
-	; ImpresionCaracter 10	;imprimo un SaltoLineao de linea nose porque si no hay instruccion despues no guarda el valor
-
-	; pop dx
-	; pop bx
-	; pop cx
-	; pop ax
 
 	PintarMargen 5			
 	mov NivelActual,3
@@ -2161,12 +2046,20 @@ NIVEL3 macro
 	mov InicioPosActualBarra,59650	;POSICION DE INICIO DE LA BARRA
 	PintarBarra
 
-	;hacemos que precione una tecla
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;saldra una posicion arriba de la barra
-	mov dx,59330 ;inicio de la pelota
+	mov posicionPelota1,59330
+	mov posicionPelota2,59300
+	mov estadop1,1
+	mov estadop2,0  ;se activara cuando vaya por 31 puntos
+	mov estadop3,0  ;se acctivara cuando el puntaje sea 37
+	mov moviminetoP1,1
+	mov moviminetoP2,1
+	mov movimientoP3,1
+	mov vidas,1
+
+	mov dx,posicionPelota1
 
 	Accion:
+
 			push dx
 			MostrarEncabezado
 			pop dx
@@ -2538,8 +2431,6 @@ NIVEL3 macro
 			jmp IncrementoDerecha
 
 			Analisis_IncrementoDerecha:
-				
-
 endm
 
 ValidarChoque macro NoLineas
@@ -2653,6 +2544,7 @@ ValidarChoque macro NoLineas
 
 					activoPelota2:
 						mov estadop2,1
+						add vidas,01h
 						jmp finval2
 
 					Gano1erNivel:
@@ -3433,6 +3325,8 @@ posicionPelota3 dw 59330 ;inicio de la pelota
 moviminetoP1 db 1		;movimiento en el que me quede ID= 1, II =2, DD=3, Di=4
 moviminetoP2 db 1
 movimientoP3 db 0
+
+vidas db 0	;vidas de pelotas activas
 
 ;-------------------SEGMENTO DE CODIGO------------------------
 .code
